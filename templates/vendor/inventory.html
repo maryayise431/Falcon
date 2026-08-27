@@ -1,0 +1,49 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Warehouse Inventory{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; AT FALCON WAREHOUSES /&gt;</p>
+    <h1 class="page-title">MY INVENTORY</h1>
+  </div>
+  <a href="{% url 'vendor:inventory_add' %}" class="btn btn-solid">Register Stock <i class="ri-add-line"></i></a>
+</div>
+
+<form method="get" class="filter-bar mb-24">
+  <input type="text" name="q" value="{{ search_query }}" placeholder="Search stock..." class="form-input" />
+  <select name="status" class="form-input" onchange="this.form.submit()">
+    <option value="">All states</option>
+    {% for value, label in status_choices %}
+    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+<div class="panel">
+  {% if products %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>ITEM</th><th>PRICE</th><th>WAREHOUSE</th><th>RECEIVED / TOTAL</th><th>STATE</th><th>REGISTERED</th></tr></thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td style="font-weight:600;color:var(--white);">{{ product.name }}</td>
+          <td class="mono">{{ product.price|floatformat:2 }}</td>
+          <td>{{ product.warehouse.name|default:"Pending allocation" }}</td>
+          <td class="mono">{{ product.quantity_received }} / {{ product.quantity_total }}</td>
+          <td><span class="status-badge st-{{ product.status }}">{{ product.get_status_display }}</span></td>
+          <td>{{ product.created_at|date:"M d, Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-archive-2-line"></i>No stock registered yet.<br /><span class="mono" style="font-size:0.66rem;">Register items, then hand them to Falcon — we confirm receipt at the warehouse.</span></div>
+  {% endif %}
+</div>
+{% endblock %}
+

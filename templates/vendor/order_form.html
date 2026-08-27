@@ -1,0 +1,24 @@
+{% extends "base_dashboard.html" %}
+{% load static %}{% block topbar_title %}New Fulfilment Order{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">NEW ORDER</h1>
+    <p class="page-sub">Ship from your Falcon warehouse stock on Cash-on-Delivery. The COD amount is your product price. Delivery fee is set by the manager. COD lands in your wallet after delivery.</p>
+  </div>
+  <a href="{% url 'vendor:orders' %}" class="btn btn-outline"><i class="ri-arrow-left-line"></i> All Orders</a>
+</div>
+
+<div class="panel" style="max-width:720px;">
+  <form method="post" novalidate class="panel-body stack">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-solid">Create Order <i class="ri-shopping-bag-3-line"></i></button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/maps.js' %}"></script>{% endblock %}
+

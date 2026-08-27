@@ -1,0 +1,177 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Order {{ order.order_reference }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'marketplace:manager_orders' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL ORDERS</a>
+    <h1 class="page-title mt-8">{{ order.order_reference }}</h1>
+  </div>
+  <span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span>
+</div>
+
+<div class="order-detail-grid">
+  <div class="stack" style="gap:20px;">
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">ITEMS</span></div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>PRODUCT</th><th>QTY</th><th>UNIT</th><th>SUBTOTAL</th></tr></thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.product_name }}</td>
+              <td class="mono">{{ item.quantity }}</td>
+              <td class="mono">&#8358;{{ item.unit_price|floatformat:2 }}</td>
+              <td class="mono">&#8358;{{ item.subtotal|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+            <tr><td colspan="3" style="text-align:right;font-family:var(--font-mono);color:var(--grey);">PRODUCT TOTAL</td><td class="mono">&#8358;{{ order.product_total|floatformat:2 }}</td></tr>
+            {% if order.delivery_fee or order.delivery_method == 'door_delivery' %}
+            <tr><td colspan="3" style="text-align:right;font-family:var(--font-mono);color:var(--grey);">DELIVERY FEE</td><td class="mono text-lime">{% if order.delivery_fee %}&#8358;{{ order.delivery_fee|floatformat:2 }}{% else %}&#8358;0.00{% endif %}</td></tr>
+            {% endif %}
+            <tr><td colspan="3" style="text-align:right;font-family:var(--font-mono);font-weight:700;">TOTAL</td><td class="mono text-lime" style="font-weight:700;">&#8358;{{ order.total_amount|floatformat:2 }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if order.status == 'awaiting_fee' %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">SET DELIVERY FEE</span></div>
+      <form method="post" action="{% url 'marketplace:manager_set_delivery_fee' order.order_reference %}" data-confirm="Set this delivery fee? The customer total will update." class="panel-body stack" style="gap:12px;">
+        {% csrf_token %}
+        <p style="font-size:0.78rem;color:var(--grey);">Enter the delivery fee to charge (product total: &#8358;{{ order.product_total|floatformat:2 }}).</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="mono" style="font-size:1rem;">&#8358;</span>
+          <input type="number" name="delivery_fee" step="0.01" min="0" value="{{ order.delivery_fee|floatformat:2 }}" class="form-input" style="flex:1;" placeholder="0.00" required>
+        </div>
+        <button type="submit" class="btn btn-solid btn-sm"><i class="ri-check-line"></i> Save Delivery Fee</button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if order.delivery_method == 'door_delivery' and order.status != 'awaiting_fee' and order.status != 'pending' and order.status != 'cancelled' and order.status != 'delivered' and order.status != 'failed' %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">DELIVERY AGENT</span></div>
+      {% if assignment %}
+      <div class="panel-body stack" style="gap:12px;">
+        <div class="kv-row"><span class="kv-key">Agent</span><span class="kv-val">{{ assignment.agent.full_name|default:assignment.agent.user.email }}</span></div>
+        <div class="kv-row"><span class="kv-key">Status</span><span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span></div>
+        {% if assignment.delivered_at %}
+        <div class="kv-row"><span class="kv-key">Delivered</span><span class="kv-val mono">{{ assignment.delivered_at|date:"d M Y H:i" }}</span></div>
+        {% endif %}
+        {% if assignment.delivery_notes %}
+        <div class="kv-row"><span class="kv-key">Notes</span><span class="kv-val">{{ assignment.delivery_notes|truncatechars:80 }}</span></div>
+        {% endif %}
+
+        {% if assignment.status == 'assigned' %}
+        <form method="post" action="{% url 'marketplace:manager_dispatch' order.order_reference %}" data-confirm="Approve dispatch? Agent can now pick up.">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-solid btn-sm"><i class="ri-truck-line"></i> Approve Dispatch</button>
+        </form>
+        {% endif %}
+
+        {% if order.status == 'processing' %}
+        <form method="post" action="{% url 'marketplace:manager_assign_agent' order.order_reference %}" class="stack" style="gap:8px;margin-top:8px;border-top:1px solid var(--border);padding-top:12px;">
+          {% csrf_token %}
+          <label class="mono" style="font-size:0.62rem;letter-spacing:0.12em;color:var(--grey);">REASSIGN AGENT</label>
+          <div style="display:flex;gap:8px;">
+            <select name="agent_id" class="form-input" style="flex:1;" required>
+              <option value="">Select agent...</option>
+              {% for agent in agents %}
+              <option value="{{ agent.id }}">{{ agent.full_name|default:agent.user.email }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline btn-sm">Reassign</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+      {% else %}
+      <form method="post" action="{% url 'marketplace:manager_assign_agent' order.order_reference %}" data-confirm="Assign this agent to deliver the order?" class="panel-body stack" style="gap:12px;">
+        {% csrf_token %}
+        <select name="agent_id" class="form-input" required>
+          <option value="">Select delivery agent...</option>
+          {% for agent in agents %}
+          <option value="{{ agent.id }}">{{ agent.full_name|default:agent.user.email }} &mdash; {{ agent.address|default:agent.assigned_zone|default:"any zone" }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-solid btn-sm"><i class="ri-user-shared-line"></i> Assign Agent</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if order.status == 'out_for_delivery' %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">MARK DELIVERED</span></div>
+      <form method="post" action="{% url 'marketplace:manager_order_status' order.order_reference %}" data-confirm="Mark this order as delivered?" class="panel-body stack" style="gap:12px;">
+        {% csrf_token %}
+        <input type="hidden" name="status" value="delivered">
+        <label class="mono" style="font-size:0.62rem;letter-spacing:0.12em;color:var(--grey);">DELIVERY NOTES (OPTIONAL)</label>
+        <textarea name="reason" class="form-input" rows="2" placeholder="Any notes about this delivery..."></textarea>
+        <button type="submit" class="btn btn-solid btn-sm"><i class="ri-checkbox-circle-line"></i> Mark Delivered</button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if allowed_statuses %}
+    <div class="panel">
+      <form method="post" action="{% url 'marketplace:manager_order_status' order.order_reference %}" data-confirm="Apply this status change? This is audited." class="panel-body stack">
+        {% csrf_token %}
+        <label style="font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.12em;color:var(--grey);">UPDATE STATUS</label>
+        <div class="flex" style="flex-wrap:wrap;gap:6px;">
+          {% for value, label in allowed_statuses %}
+          <button type="submit" name="status" value="{{ value }}" class="btn btn-outline btn-sm">{{ label }}</button>
+          {% endfor %}
+        </div>
+        <input type="text" name="reason" placeholder="Reason (optional, logged to audit trail)" class="form-input mt-8" />
+      </form>
+    </div>
+    {% else %}
+    <div class="notice-strip"><i class="ri-lock-line"></i> This order is final — status is locked.</div>
+    {% endif %}
+  </div>
+
+  <aside class="panel">
+    <div class="panel-head"><span class="panel-title">DETAILS</span></div>
+    <div class="panel-body stack">
+      <div class="kv-row"><span class="kv-key">Customer</span><span class="kv-val">{{ order.customer.email|truncatechars:22 }}</span></div>
+      <div class="kv-row"><span class="kv-key">Placed</span><span class="kv-val mono">{{ order.created_at|date:"d M Y H:i" }}</span></div>
+      {% if order.delivered_at %}
+      <div class="kv-row"><span class="kv-key">Delivered</span><span class="kv-val mono">{{ order.delivered_at|date:"d M Y H:i" }}</span></div>
+      {% endif %}
+      <div class="kv-row"><span class="kv-key">Delivery Method</span><span class="kv-val mono">{{ order.get_delivery_method_display }}</span></div>
+      {% if order.delivery_method == 'pickup' and order.pickup_warehouse %}
+      <div class="kv-row"><span class="kv-key">Warehouse</span><span class="kv-val">{{ order.pickup_warehouse.name }}</span></div>
+      {% endif %}
+      {% if order.payment %}
+      <div class="kv-row"><span class="kv-key">Payment</span><span class="status-badge st-{{ order.payment.status }}">{{ order.payment.get_status_display }}</span></div>
+      <div class="kv-row"><span class="kv-key">Paystack Ref</span><span class="ref-code">{{ order.payment.paystack_reference|truncatechars:18|default:"—" }}</span></div>
+      {% endif %}
+      <div class="kv-row"><span class="kv-key">Receiver</span><span class="kv-val mono">{{ order.receiver_phone|default:"—" }}</span></div>
+      <div class="kv-row"><span class="kv-key">Address</span><span class="kv-val">{{ order.delivery_address|truncatechars:80|default:"—" }}</span></div>
+      {% if assignment %}
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+        <div class="kv-row"><span class="kv-key">Agent</span><span class="kv-val">{{ assignment.agent.full_name|default:assignment.agent.user.email }}</span></div>
+        <div class="kv-row"><span class="kv-key">Agent Status</span><span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span></div>
+        {% if assignment.delivered_at %}
+        <div class="kv-row"><span class="kv-key">Delivered At</span><span class="kv-val mono">{{ assignment.delivered_at|date:"d M H:i" }}</span></div>
+        {% endif %}
+        {% if assignment.delivery_notes %}
+        <div class="kv-row"><span class="kv-key">Notes</span><span class="kv-val">{{ assignment.delivery_notes|truncatechars:80 }}</span></div>
+        {% endif %}
+      </div>
+      {% endif %}
+      <a href="{% url 'tracking:detail' order.order_reference %}" class="btn btn-outline mt-8">Public Tracking View <i class="ri-external-link-line"></i></a>
+    </div>
+  </aside>
+</div>
+<style>
+.order-detail-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;}
+@media(max-width:768px){.order-detail-grid{grid-template-columns:1fr;}}
+</style>
+{% endblock %}

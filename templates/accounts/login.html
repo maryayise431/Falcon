@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign In{% endblock %}
+{% block body_class %}auth-bare{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="bare-auth-wrap">
+  <div class="auth-card">
+    <img src="{% static 'images/logo.png' %}" alt="Falcon" class="auth-logo" />
+    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-solid w-100 mt-16">Sign In <i class="ri-login-circle-line"></i></button>
+    </form>
+
+    <div class="bare-links">
+      <a href="{% url 'accounts:forgot_password' %}" class="bare-link">Forgot password?</a>
+      <a href="{% url 'accounts:register_vendor' %}" class="bare-link">Create account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

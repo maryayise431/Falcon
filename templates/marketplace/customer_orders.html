@@ -1,0 +1,50 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}My Orders{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_customer.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">MY ORDERS</h1></div>
+  <form method="get" class="filter-bar">
+    <select name="status" class="form-input" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>DATE</th><th>ITEMS</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'marketplace:order_confirmation' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.created_at|date:"M d, Y" }}</td>
+          <td>{{ order.items.count }}</td>
+          <td class="mono">&#8358;{{ order.total_amount|floatformat:2 }}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          <td style="white-space:nowrap;">
+            {% if order.status == 'awaiting_fee' and order.delivery_fee_set_at %}
+            <form method="post" action="{% url 'marketplace:customer_pay_order' order.order_reference %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-solid btn-sm">Pay Now <i class="ri-shield-check-line"></i></button>
+            </form>
+            {% endif %}
+            <a href="{% url 'tracking:detail' order.order_reference %}" class="mono text-green" style="font-size:0.68rem;">TRACK <i class="ri-arrow-right-line"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No orders found.</div>
+  {% endif %}
+</div>
+{% endblock %}

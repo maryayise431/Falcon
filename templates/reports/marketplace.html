@@ -1,0 +1,49 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}Marketplace Sales{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">MARKETPLACE SALES</h1></div>
+  <div class="page-actions">
+    <form method="get" class="filter-bar">
+      <select name="period" id="period-select" class="form-input">
+        {% for value, label in period_choices %}
+        <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="?{% if period %}period={{ period }}&amp;{% endif %}export=csv" class="btn btn-outline"><i class="ri-download-2-line"></i> CSV</a>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">PAID ORDERS</span><span class="stat-value">{{ order_count }}</span><i class="ri-shopping-bag-3-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">SALES VOLUME</span><span class="stat-value green">&#8358;{{ total_revenue|floatformat:0 }}</span><i class="ri-money-dollar-circle-line stat-icon"></i></div>
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>CUSTOMER</th><th>DATE</th><th>TOTAL</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'marketplace:manager_order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.customer.email|truncatechars:22 }}</td>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ order.created_at|date:"d M H:i" }}</td>
+          <td class="mono">&#8358;{{ order.total_amount|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No paid orders in this window.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

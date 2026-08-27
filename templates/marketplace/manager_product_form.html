@@ -1,0 +1,32 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}{% if product %}Edit Product{% else %}New Product{% endif %}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{% if product %}EDIT: {{ product.name|upper|truncatechars:24 }}{% else %}NEW PRODUCT{% endif %}</h1>
+    <p class="page-sub">Products go live on the storefront once published.</p>
+  </div>
+  <a href="{% url 'marketplace:manager_products' %}" class="btn btn-outline"><i class="ri-arrow-left-line"></i> Back</a>
+</div>
+
+<div class="panel" style="max-width:720px;">
+  <form method="post" enctype="multipart/form-data" novalidate class="panel-body stack">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <div class="form-group">
+      <label for="images">Product Images</label>
+      <input type="file" id="images" name="images" multiple accept="image/*" class="form-input" />
+      {% if product and product.images.all %}
+      <div class="flex mt-8" style="gap:8px;flex-wrap:wrap;">
+        {% for img in product.images.all %}
+        <img src="{{ img.image.url }}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" />
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-solid">{% if product %}Save Changes{% else %}Create Product{% endif %} <i class="ri-check-line"></i></button>
+  </form>
+</div>
+{% endblock %}

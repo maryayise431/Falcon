@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:44px;">
+  <div class="container" style="max-width:1000px;">
+    <div class="checkout-grid">
+      <div>
+        <p class="eyebrow mono">&lt; SECURE CHECKOUT /&gt;</p>
+        <h1 class="display-md mb-24">DELIVERY DETAILS</h1>
+
+        <form method="post" novalidate class="panel">
+          {% csrf_token %}
+          <div class="panel-body stack" style="gap:16px;">
+
+            <label class="mono" style="font-size:0.68rem;letter-spacing:0.12em;color:var(--grey);">HOW SHOULD WE DELIVER?</label>
+            <div class="delivery-toggle">
+              <label class="delivery-option {% if form.delivery_method.value != 'pickup' %}active{% endif %}" data-method="door_delivery">
+                <input type="radio" name="delivery_method" value="door_delivery" {% if form.delivery_method.value != 'pickup' %}checked{% endif %} class="hidden">
+                <div class="panel" style="margin:0;cursor:pointer;border:2px solid {% if form.delivery_method.value != 'pickup' %}var(--green){% else %}var(--border){% endif %};">
+                  <div class="panel-body" style="padding:14px;text-align:center;">
+                    <i class="ri-door-open-line" style="font-size:1.4rem;"></i>
+                    <p class="mono" style="font-size:0.72rem;margin-top:6px;">DOOR DELIVERY</p>
+                    <p style="font-size:0.7rem;color:var(--grey);margin-top:2px;">Delivered to your address</p>
+                  </div>
+                </div>
+              </label>
+              <label class="delivery-option {% if form.delivery_method.value == 'pickup' %}active{% endif %}" data-method="pickup">
+                <input type="radio" name="delivery_method" value="pickup" {% if form.delivery_method.value == 'pickup' %}checked{% endif %} class="hidden">
+                <div class="panel" style="margin:0;cursor:pointer;border:2px solid {% if form.delivery_method.value == 'pickup' %}var(--green){% else %}var(--border){% endif %};">
+                  <div class="panel-body" style="padding:14px;text-align:center;">
+                    <i class="ri-store-2-line" style="font-size:1.4rem;"></i>
+                    <p class="mono" style="font-size:0.72rem;margin-top:6px;">WAREHOUSE PICKUP</p>
+                    <p style="font-size:0.7rem;color:var(--grey);margin-top:2px;">Pick up for free</p>
+                  </div>
+                </div>
+              </label>
+            </div>
+            {% if form.delivery_method.errors %}
+            <p class="error-text">{{ form.delivery_method.errors.0 }}</p>
+            {% endif %}
+
+            <div id="door-fields" style="{% if form.delivery_method.value == 'pickup' %}display:none;{% endif %}">
+              <label class="mono" style="font-size:0.68rem;letter-spacing:0.12em;color:var(--grey);">DELIVERY ADDRESS</label>
+              <input type="text" name="delivery_address" value="{{ form.delivery_address.value|default:'' }}" placeholder="Street, area, city" class="form-input mt-8">
+              {% if form.delivery_address.errors %}<p class="error-text">{{ form.delivery_address.errors.0 }}</p>{% endif %}
+
+              <label class="mono mt-16" style="font-size:0.68rem;letter-spacing:0.12em;color:var(--grey);">PHONE NUMBER</label>
+              <input type="text" name="receiver_phone" value="{{ form.receiver_phone.value|default:'' }}" placeholder="0801 234 5678" class="form-input mt-8">
+              {% if form.receiver_phone.errors %}<p class="error-text">{{ form.receiver_phone.errors.0 }}</p>{% endif %}
+
+              {{ form.delivery_address_lat }}
+              {{ form.delivery_address_lng }}
+              <button type="button" id="use-my-location" class="btn btn-outline btn-sm mt-12"><i class="ri-map-pin-line"></i> Use my current location</button>
+              <iframe id="map-embed" data-lat="" data-lng="" class="hidden" title="Delivery location preview" style="width:100%;height:180px;border-radius:8px;overflow:hidden;margin-top:12px;border:1px solid var(--border);"></iframe>
+            </div>
+
+            <div id="pickup-fields" style="{% if form.delivery_method.value != 'pickup' %}display:none;{% endif %}">
+              <label class="mono" style="font-size:0.68rem;letter-spacing:0.12em;color:var(--grey);">SELECT WAREHOUSE</label>
+              <div class="stack mt-8" style="gap:10px;">
+                {% for wh in warehouses %}
+                <label class="panel warehouse-option" style="margin:0;cursor:pointer;border:2px solid {% if form.pickup_warehouse.value|stringformat:'s' == wh.id|stringformat:'s' %}var(--green){% else %}var(--border){% endif %};" onclick="this.querySelector('input').checked=true">
+                  <div class="panel-body" style="padding:12px;display:flex;align-items:center;gap:12px;">
+                    <input type="radio" name="pickup_warehouse" value="{{ wh.id }}" {% if form.pickup_warehouse.value|stringformat:'s' == wh.id|stringformat:'s' %}checked{% endif %} class="hidden">
+                    <i class="ri-store-2-line" style="font-size:1.2rem;color:var(--green);"></i>
+                    <div>
+                      <p class="mono" style="font-size:0.78rem;">{{ wh.name }}</p>
+                      <p style="font-size:0.7rem;color:var(--grey);">{{ wh.address }}</p>
+                    </div>
+                  </div>
+                </label>
+                {% empty %}
+                <p style="font-size:0.8rem;color:var(--grey);">No warehouses available.</p>
+                {% endfor %}
+              </div>
+              {% if form.pickup_warehouse.errors %}<p class="error-text">{{ form.pickup_warehouse.errors.0 }}</p>{% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-solid w-100 mt-16" id="checkout-submit">
+              {% if form.delivery_method.value == 'pickup' %}
+              Pay &#8358;{{ cart.total_display }} with Paystack <i class="ri-shield-check-line"></i>
+              {% else %}
+              Place Order <i class="ri-checkbox-circle-line"></i>
+              {% endif %}
+            </button>
+            {% if not PAYSTACK_ENABLED %}
+            <p class="notice-strip" style="margin-bottom:0;"><i class="ri-information-line"></i> Dev mode: payment will be auto-confirmed (no Paystack key set).</p>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+
+      <aside class="panel">
+        <div class="panel-head"><span class="panel-title">ORDER SUMMARY</span></div>
+        <div class="panel-body stack">
+          {% for entry in cart.entries %}
+          <div class="flex-between">
+            <span style="font-size:0.85rem;">{{ entry.product.name }} &times; {{ entry.quantity }}</span>
+            <span class="mono">&#8358;{{ entry.subtotal|floatformat:2 }}</span>
+          </div>
+          {% endfor %}
+          <div class="kv-row" style="border-top:1px solid var(--border);"><span class="kv-key">TOTAL</span><span class="kv-val green">{{ cart.total_display }}</span></div>
+          <p id="delivery-note" class="mono" style="font-size:0.68rem;color:var(--grey);">
+            {% if form.delivery_method.value == 'pickup' %}No delivery fee for warehouse pickup.{% else %}Delivery fee will be set by a manager. You pay after.{% endif %}
+          </p>
+          <a href="{% url 'marketplace:cart' %}" class="mono text-green" style="font-size:0.7rem;"><i class="ri-arrow-left-line"></i> EDIT CART</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+<style>
+.checkout-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;}
+.delivery-toggle{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.delivery-option{cursor:pointer;}
+.warehouse-option{transition:border-color 0.15s;}
+@media(max-width:768px){
+  .checkout-grid{grid-template-columns:1fr;}
+  .delivery-toggle{grid-template-columns:1fr;}
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/maps.js' %}"></script>
+<script>
+(function(){
+  var doorFields = document.getElementById('door-fields');
+  var pickupFields = document.getElementById('pickup-fields');
+  var submitBtn = document.getElementById('checkout-submit');
+  var deliveryNote = document.getElementById('delivery-note');
+  var options = document.querySelectorAll('.delivery-option');
+  var paystackAmount = '{{ cart.total_display|escapejs }}';
+
+  function switchMethod(method){
+    for(var i=0;i<options.length;i++){
+      var opt = options[i];
+      var radio = opt.querySelector('input[type=radio]');
+      var panel = opt.querySelector('.panel');
+      if(radio.value === method){
+        radio.checked = true;
+        opt.classList.add('active');
+        panel.style.borderColor = 'var(--green)';
+      } else {
+        opt.classList.remove('active');
+        panel.style.borderColor = 'var(--border)';
+      }
+    }
+    if(method === 'pickup'){
+      doorFields.style.display = 'none';
+      pickupFields.style.display = '';
+      submitBtn.innerHTML = 'Pay &#8358;' + paystackAmount + ' with Paystack <i class="ri-shield-check-line"></i>';
+      deliveryNote.textContent = 'No delivery fee for warehouse pickup.';
+    } else {
+      doorFields.style.display = '';
+      pickupFields.style.display = 'none';
+      submitBtn.innerHTML = 'Place Order <i class="ri-checkbox-circle-line"></i>';
+      deliveryNote.textContent = 'Delivery fee will be set by a manager. You pay after.';
+    }
+  }
+
+  for(var i=0;i<options.length;i++){
+    options[i].addEventListener('click', function(){ switchMethod(this.dataset.method); });
+  }
+
+  switchMethod(document.querySelector('input[name=delivery_method]:checked').value);
+})();
+</script>
+{% endblock %}

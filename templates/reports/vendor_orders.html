@@ -1,0 +1,49 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}My Reports · Orders{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">MY ORDERS REPORT</h1></div>
+  <form method="get" class="filter-bar">
+    <select name="period" id="period-select" class="form-input">
+      {% for value, label in period_choices %}
+      <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">COD DELIVERED</span><span class="stat-value green">&#8358;{{ cod_delivered|floatformat:0 }}</span><i class="ri-hand-coin-line stat-icon"></i></div>
+  {% for status, count in counts.items %}
+  <div class="stat-card"><span class="stat-label">{{ status|upper }}</span><span class="stat-value">{{ count }}</span></div>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>CUSTOMER</th><th>COD</th><th>STATUS</th><th>DATE</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'vendor:order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.customer_name|truncatechars:16 }}</td>
+          <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ order.created_at|date:"d M H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No orders in this window.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

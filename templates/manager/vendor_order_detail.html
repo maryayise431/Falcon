@@ -1,0 +1,139 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Order {{ order.order_reference }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'vendor:manager_vendor_orders' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL ORDERS</a>
+    <h1 class="page-title mt-8">{{ order.order_reference }}</h1>
+  </div>
+  <span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span>
+</div>
+
+<div class="grid-2">
+  <div class="stack" style="gap:20px;">
+
+    {% if is_manager %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">MANAGE ORDER</span></div>
+      <div class="panel-body stack">
+        {% if order.status == 'pending' %}
+        <form method="post" action="{% url 'vendor:manager_order_process' order.order_reference %}" data-confirm="Start processing this order?">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-play-circle-line"></i> Start Processing</button>
+        </form>
+        {% elif order.status == 'processing' %}
+        <form method="post" action="{% url 'vendor:manager_order_approve' order.order_reference %}" data-confirm="Approve this order with the entered handling fee?" class="stack">
+          {% csrf_token %}
+          <label style="font-family:var(--font-mono);font-size:0.62rem;color:var(--grey);letter-spacing:0.1em;">SET DELIVERY FEE &amp; APPROVE</label>
+          {% include "partials/form_fields.html" with form=fee_form %}
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-check-double-line"></i> Approve &amp; Queue for Agent</button>
+        </form>
+        {% elif order.status == 'awaiting_assignment' %}
+        <form method="post" action="{% url 'vendor:manager_order_assign' order.order_reference %}" data-confirm="Assign this delivery agent to the order?" class="stack">
+          {% csrf_token %}
+          <label style="font-family:var(--font-mono);font-size:0.62rem;color:var(--grey);letter-spacing:0.1em;">ASSIGN DELIVERY AGENT</label>
+          <select name="agent_id" class="form-input" required>
+            <option value="">Select agent…</option>
+            {% for agent in agents %}
+            <option value="{{ agent.id }}">{{ agent.full_name|default:agent.user.email }} — Zone: {{ agent.assigned_zone|default:"any" }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-user-shared-line"></i> Assign Agent</button>
+        </form>
+        {% elif order.status == 'assigned' %}
+        <form method="post" action="{% url 'vendor:manager_order_dispatch' order.order_reference %}" data-confirm="Approve dispatch? The agent can now pick up.">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-truck-line"></i> Approve Dispatch</button>
+        </form>
+        {% elif order.status == 'approved' or order.status == 'out_for_delivery' %}
+        <div class="notice-strip"><i class="ri-truck-line"></i> Order is out for delivery. You can mark it delivered below with COD details.</div>
+        <form method="post" action="{% url 'manager_delivery_delivered' order.order_reference %}" data-confirm="Mark this order as delivered and credit the vendor's wallet?" class="stack">
+          {% csrf_token %}
+          <label style="font-family:var(--font-mono);font-size:0.62rem;color:var(--grey);letter-spacing:0.1em;">COD COLLECTED (&#8358;{{ order.cod_amount|floatformat:2 }} expected)</label>
+          <input type="number" name="cod_collected" class="form-input" value="{{ order.cod_amount|floatformat:2 }}" step="0.01" min="0" required />
+          <label style="font-family:var(--font-mono);font-size:0.62rem;color:var(--grey);letter-spacing:0.1em;">DELIVERY NOTES</label>
+          <textarea name="delivery_notes" class="form-input" rows="2" placeholder="Optional notes about the delivery…"></textarea>
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-checkbox-circle-fill"></i> Mark Delivered &amp; Settle COD</button>
+        </form>
+        {% endif %}
+
+        {% if order.status not in 'delivered,failed,cancelled,approved,out_for_delivery,pending,processing' %}
+        <div style="border-top:1px dashed var(--border);padding-top:14px;" class="stack">
+          <label style="font-family:var(--font-mono);font-size:0.6rem;color:var(--grey);letter-spacing:0.12em;">OVERRIDE (AUDITED)</label>
+          <form method="post" action="{% url 'manager_delivery_delivered' order.order_reference %}" data-confirm="Force-mark this delivery as delivered with full COD collected?">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline w-100"><i class="ri-checkbox-circle-line"></i> Override: Delivered</button>
+          </form>
+          <form method="post" action="{% url 'manager_delivery_failed' order.order_reference %}" data-confirm="Force-fail this delivery? This is audited.">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline w-100 text-red"><i class="ri-close-circle-line"></i> Override: Failed</button>
+          </form>
+        </div>
+        {% endif %}
+
+        {% if order.status not in 'delivered,failed,cancelled' %}
+        <form method="post" action="{% url 'vendor:manager_order_cancel' order.order_reference %}" data-confirm="Cancel this order? Stock returns to the vendor's inventory." data-confirm-title="Cancel order" style="border-top:1px dashed var(--border);padding-top:14px;">
+          {% csrf_token %}
+          <input type="text" name="reason" placeholder="Cancellation reason (audited)" class="form-input" required />
+          <button type="submit" class="btn btn-danger w-100 mt-8">Cancel Order</button>
+        </form>
+        {% else %}
+        <div class="notice-strip" style="margin:0;"><i class="ri-lock-line"></i> Final status — locked{% if not user.is_superuser %} (superusers may still override via Django admin){% endif %}.</div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="notice-strip"><i class="ri-eye-line"></i> Read-only view — only Managers can act on orders.</div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">DELIVERY INFO</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">Customer</span><span class="kv-val">{{ order.customer_name }}</span></div>
+        <div class="kv-row"><span class="kv-key">Phone</span><span class="kv-val mono">{{ order.customer_phone }}</span></div>
+        <div class="kv-row"><span class="kv-key">Address</span><span class="kv-val">{{ order.customer_address|truncatechars:80 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Warehouse</span><span class="kv-val">{{ order.warehouse.name|default:"—" }}</span></div>
+        <div class="kv-row"><span class="kv-key">Item</span><span class="kv-val">{{ order.product_name }} × {{ order.quantity }}</span></div>
+        {% if order.delivery_instructions %}
+        <div class="kv-row"><span class="kv-key">Instructions</span><span class="kv-val">{{ order.delivery_instructions|truncatechars:60 }}</span></div>
+        {% endif %}
+        <a href="{% url 'tracking:detail' order.order_reference %}" class="btn btn-outline mt-8">Public Tracking <i class="ri-external-link-line"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <aside class="stack" style="gap:20px;">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">MONEY</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">COD Amount</span><span class="kv-val green mono">&#8358;{{ order.cod_amount|floatformat:2 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Delivery Fee</span><span class="kv-val mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:2 }}{% else %}Not set{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Vendor Receives</span><span class="kv-val mono">{% if order.delivery_fee is not None %}&#8358;{{ order.net_to_vendor|floatformat:2|default:"—" }}{% else %}—{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Approved By</span><span class="kv-val">{{ order.approved_by.email|default:"—"|truncatechars:20 }}</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">PARTIES</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">Vendor</span><span class="kv-val">{{ order.vendor.vendorprofile.business_name|default:order.vendor.email|truncatechars:18 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Vendor Wallet</span><span class="kv-val mono">&#8358;{{ order.vendor.wallet.balance|floatformat:2|default:"0" }}</span></div>
+        <div class="kv-row"><span class="kv-key">Agent</span><span class="kv-val">{% if order.assigned_agent %}{{ order.assigned_agent.full_name|default:order.assigned_agent.user.email|truncatechars:16 }}{% else %}Unassigned{% endif %}</span></div>
+        {% if assignment %}
+        <div class="kv-row"><span class="kv-key">Assignment</span><span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span></div>
+        {% if assignment.cod_collected %}
+        <div class="kv-row"><span class="kv-key">COD Collected</span><span class="kv-val green">&#8358;{{ assignment.cod_collected|default:order.cod_amount|floatformat:2 }}</span></div>
+        {% endif %}
+        {% if assignment.delivery_notes %}
+        <div class="kv-row"><span class="kv-key">Notes</span><span class="kv-val">{{ assignment.delivery_notes|truncatechars:80 }}</span></div>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'vendor:manager_vendor_wallet' order.vendor.id %}" class="mono text-green mt-8" style="font-size:0.68rem;">OPEN VENDOR WALLET <i class="ri-arrow-right-line"></i></a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+

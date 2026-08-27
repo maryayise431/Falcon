@@ -1,0 +1,80 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Vendor Dashboard{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; {{ user.vendorprofile.business_name|default:"VENDOR" }} /&gt;</p>
+    <h1 class="page-title">FULFILMENT OVERVIEW</h1>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'vendor:order_create' %}" class="btn btn-solid">New Order <i class="ri-add-line"></i></a>
+    <a href="{% url 'vendor:inventory' %}" class="btn btn-outline">My Inventory</a>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <span class="stat-label">WALLET BALANCE</span>
+    <span class="stat-value green">&#8358;{{ wallet.balance|floatformat:2 }}</span>
+    <i class="ri-wallet-3-line stat-icon"></i>
+  </div>
+  <div class="stat-card"><span class="stat-label">ACTIVE ORDERS</span><span class="stat-value">{{ active_orders }}</span><i class="ri-truck-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">DELIVERED</span><span class="stat-value">{{ delivered_orders }}</span><i class="ri-checkbox-circle-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">FAILED</span><span class="stat-value {% if failed_orders %}text-red{% endif %}">{{ failed_orders }}</span><i class="ri-close-circle-line stat-icon"></i></div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">RECENT ORDERS</span>
+      <a href="{% url 'vendor:orders' %}" class="mono text-green" style="font-size:0.7rem;">VIEW ALL <i class="ri-arrow-right-line"></i></a>
+    </div>
+    {% if recent_orders %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>REF</th><th>CUSTOMER</th><th>COD</th><th>STATUS</th></tr></thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><a href="{% url 'vendor:order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+            <td>{{ order.customer_name|truncatechars:18 }}</td>
+            <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
+            <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="table-empty"><i class="ri-shopping-bag-3-line"></i>No orders yet. Create your first fulfilment order.</div>
+    {% endif %}
+  </div>
+
+  <aside class="stack" style="gap:20px;">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">WALLET FEED</span></div>
+      {% if recent_transactions %}
+      <ul style="list-style:none;">
+        {% for tx in recent_transactions %}
+        <li style="display:flex;justify-content:space-between;padding:11px 20px;border-bottom:1px solid rgba(42,61,44,0.5);font-size:0.82rem;">
+          <span>{{ tx.get_transaction_type_display }}</span>
+          <span class="mono {% if tx.transaction_type == 'credit' %}text-lime{% else %}text-red{% endif %}">{% if tx.transaction_type == 'credit' %}+{% else %}-{% endif %}&#8358;{{ tx.amount|floatformat:2 }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="table-empty" style="padding:26px;"><i class="ri-wallet-3-line"></i>No transactions yet.</div>{% endif %}
+      <div style="padding:14px 20px;">
+        <a href="{% url 'vendor:wallet' %}" class="mono text-green" style="font-size:0.68rem;">FULL STATEMENT <i class="ri-arrow-right-line"></i></a>
+      </div>
+    </div>
+
+    <div class="notice-strip" style="margin-bottom:0;">
+      <i class="ri-information-line"></i>
+      {% if pending_withdrawals %}You have a withdrawal in progress. Payouts run on business days.{% else %}COD settles into your wallet the moment an agent confirms delivery.{% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
+

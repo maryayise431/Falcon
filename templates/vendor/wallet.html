@@ -1,0 +1,53 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Falcon Wallet{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; COD SETTLEMENTS /&gt;</p>
+    <h1 class="page-title">MY WALLET</h1>
+  </div>
+  <a href="{% url 'vendor:withdraw' %}" class="btn btn-solid">Withdraw <i class="ri-bank-card-line"></i></a>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">BALANCE</span><span class="stat-value green">&#8358;{{ wallet.balance|floatformat:2 }}</span><i class="ri-wallet-3-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">TOTAL CREDITS</span><span class="stat-value">&#8358;{{ summary.credits|floatformat:0 }}</span><i class="ri-arrow-down-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">FEES DEDUCTED</span><span class="stat-value text-red">&#8358;{{ summary.fees|floatformat:0 }}</span><i class="ri-scissors-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">WITHDRAWN</span><span class="stat-value">&#8358;{{ summary.withdrawn|floatformat:0 }}</span><i class="ri-bank-card-line stat-icon"></i></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <span class="panel-title">TRANSACTIONS</span>
+    <span class="mono text-grey" style="font-size:0.62rem;">WT-REF &bull; LAST 50</span>
+  </div>
+  {% if transactions %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>TYPE</th><th>DETAILS</th><th>AMOUNT</th><th>REASON</th><th>DATE</th></tr></thead>
+      <tbody>
+        {% for tx in transactions %}
+        <tr>
+          <td><span class="ref-code">{{ tx.transaction_ref }}</span></td>
+          <td><span class="status-badge st-{% if tx.transaction_type == 'credit' %}delivered{% else %}failed{% endif %}">{{ tx.get_transaction_type_display }}</span></td>
+          <td style="font-size:0.8rem;color:var(--grey);">{% if tx.related_order %}<a href="{% url 'vendor:order_detail' tx.related_order.order_reference %}" class="text-green mono" style="font-size:0.68rem;">{{ tx.related_order.order_reference }}</a>{% else %}{{ tx.reason|default:"—"|truncatechars:34 }}{% endif %}</td>
+          <td class="mono {% if tx.transaction_type == 'credit' %}text-lime{% else %}text-red{% endif %}">{% if tx.transaction_type == 'credit' %}+{% else %}-{% endif %}&#8358;{{ tx.amount|floatformat:2 }}</td>
+          <td style="font-size:0.78rem;color:var(--grey);">{{ tx.reason|default:"—" }}</td>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ tx.created_at|date:"d M Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-wallet-3-line"></i>No transactions yet. Deliveries settle here automatically.</div>
+  {% endif %}
+</div>
+
+{% if not bank_ready %}
+<div class="notice-strip mt-24"><i class="ri-error-warning-line"></i> Your bank account isn't verified yet — withdrawals are locked. <a href="{% url 'vendor:bank' %}" style="color:var(--lime);text-decoration:underline;">Add it now</a>.</div>
+{% endif %}
+{% endblock %}
+

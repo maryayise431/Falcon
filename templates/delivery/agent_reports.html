@@ -1,0 +1,53 @@
+{% extends "base_dashboard.html" %}
+{% load static %}{% block topbar_title %}My Performance{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_agent.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; AGENT ANALYTICS /&gt;</p>
+    <h1 class="page-title">MY PERFORMANCE</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <select name="period" id="period-select" class="form-input">
+      {% for value, label in period_choices %}
+      <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">DELIVERED</span><span class="stat-value green">{{ counts.delivered }}</span><i class="ri-checkbox-circle-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">FAILED</span><span class="stat-value text-red">{{ counts.failed }}</span><i class="ri-close-circle-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">STILL ACTIVE</span><span class="stat-value">{{ counts.active }}</span><i class="ri-route-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">COD HANDLED</span><span class="stat-value">&#8358;{{ cod_total|floatformat:0 }}</span><i class="ri-hand-coin-line stat-icon"></i></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><span class="panel-title">ASSIGNMENTS IN PERIOD</span><span class="mono text-grey" style="font-size:0.62rem;">{{ start|date:"d M" }} – {{ end|date:"d M Y" }}</span></div>
+  {% if assignments %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>KIND</th><th>STATUS</th><th>COD COLLECTED</th><th>DATE</th></tr></thead>
+      <tbody>
+        {% for assignment in assignments %}
+        <tr>
+          <td><a href="{% url 'agent:agent_detail' assignment.reference %}" class="ref-code">{{ assignment.reference }}</a></td>
+          <td>{% if assignment.order %}Vendor Order{% else %}Parcel{% endif %}</td>
+          <td><span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span></td>
+          <td class="mono">{% if assignment.cod_collected %}&#8358;{{ assignment.cod_collected|floatformat:0 }}{% else %}—{% endif %}</td>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ assignment.assigned_at|date:"d M H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-bar-chart-line"></i>No activity in this period.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}
+

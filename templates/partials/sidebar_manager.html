@@ -1,0 +1,21 @@
+﻿<a href="{% url 'reports:manager_dashboard' %}" class="side-link {% if request.resolver_match.url_name == 'manager_dashboard' %}active{% endif %}"><i class="ri-dashboard-line"></i> Control Center</a>
+<a href="{% url 'marketplace:manager_products' %}" class="side-link {% if request.resolver_match.url_name == 'manager_products' %}active{% endif %}"><i class="ri-archive-drawer-line"></i> Products</a>
+<a href="{% url 'marketplace:manager_orders' %}" class="side-link {% if request.resolver_match.url_name == 'manager_orders' %}active{% endif %}"><i class="ri-shopping-bag-3-line"></i> Orders</a>
+<a href="{% url 'vendor:manager_vendors' %}" class="side-link {% if request.resolver_match.url_name == 'manager_vendors' %}active{% endif %}"><i class="ri-store-2-line"></i> Vendors Inventory</a>
+<a href="{% url 'vendor:manager_vendor_orders' %}" class="side-link {% if request.resolver_match.url_name == 'manager_vendor_orders' %}active{% endif %}">
+  <i class="ri-shopping-bag-3-line"></i> Fulfilment Orders
+  {% if pending_counts.pending_orders %}<span class="count-pill">{{ pending_counts.pending_orders }}</span>{% endif %}
+</a>
+<a href="{% url 'vendor:manager_withdrawals' %}" class="side-link {% if request.resolver_match.url_name == 'manager_withdrawals' %}active{% endif %}">
+  <i class="ri-bank-card-line"></i> Withdrawals
+  {% if pending_counts.pending_withdrawals %}<span class="count-pill red">{{ pending_counts.pending_withdrawals }}</span>{% endif %}
+</a>
+<a href="{% url 'parcel:manager_list' %}" class="side-link {% if request.resolver_match.app_name == 'parcel' and request.resolver_match.url_name|slice:':7' == 'manager' %}active{% endif %}">
+  <i class="ri-send-plane-2-line"></i> Parcels
+  {% if pending_counts.parcels_to_quote %}<span class="count-pill">{{ pending_counts.parcels_to_quote }}</span>{% endif %}
+</a>
+<a href="{% url 'reports:report_revenue' %}" class="side-link {% if request.resolver_match.url_name == 'revenue_report' %}active{% endif %}"><i class="ri-money-dollar-circle-line"></i> Revenue</a>
+<a href="{% url 'reports:report_cod' %}" class="side-link {% if request.resolver_match.url_name == 'cod_report' %}active{% endif %}"><i class="ri-hand-coin-line"></i> COD Ledger</a>
+<a href="{% url 'reports:report_withdrawals' %}" class="side-link {% if request.resolver_match.url_name == 'withdrawal_report' %}active{% endif %}"><i class="ri-bank-card-line"></i> Payouts Report</a>
+<a href="{% url 'reports:report_daily' %}" class="side-link {% if request.resolver_match.url_name == 'daily_report' %}active{% endif %}"><i class="ri-calendar-line"></i> Daily Snapshot</a>
+<a href="{% url 'manager_users' %}" class="side-link {% if request.resolver_match.url_name == 'manager_users' %}active{% endif %}"><i class="ri-team-line"></i> Users</a>

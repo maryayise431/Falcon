@@ -1,0 +1,119 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Product Detail{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'vendor:manager_vendors' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> VENDORS INVENTORY</a>
+    <h1 class="page-title mt-8">{{ product.name|upper }}</h1>
+    <p class="page-sub">{{ product.vendor.vendorprofile.business_name|default:product.vendor.email }}</p>
+  </div>
+</div>
+
+<div class="product-detail-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:860px;">
+  <div class="panel panel-body stack">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">PRODUCT INFO</h3>
+    <div class="kv-row"><span class="kv-label">Name</span><span class="mono" style="color:var(--white);">{{ product.name }}</span></div>
+    <div class="kv-row"><span class="kv-label">Description</span><span style="color:var(--white);font-size:0.82rem;">{{ product.description|default:"—" }}</span></div>
+    <div class="kv-row"><span class="kv-label">Price</span><span class="mono" style="color:var(--white);">{{ product.price|floatformat:2 }}</span></div>
+    <div class="kv-row"><span class="kv-label">Status</span><span class="status-badge st-{{ product.status }}">{{ product.get_status_display }}</span></div>
+    <div class="kv-row"><span class="kv-label">Registered</span><span class="mono" style="color:var(--white);font-size:0.78rem;">{{ product.created_at|date:"M d, Y H:i" }}</span></div>
+  </div>
+
+  <div class="panel panel-body stack">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">STOCK & ALLOCATION</h3>
+    <div class="kv-row"><span class="kv-label">Quantity Total</span><span class="mono" style="color:var(--white);">{{ product.quantity_total }}</span></div>
+    <div class="kv-row"><span class="kv-label">Quantity Available</span><span class="mono" style="color:var(--white);">{{ product.quantity_available }}</span></div>
+    <div class="kv-row"><span class="kv-label">Warehouse</span><span style="color:var(--white);">{{ product.warehouse.name|default:"Not assigned" }}</span></div>
+    {% if product.warehouse %}
+    <div class="kv-row"><span class="kv-label">Warehouse Address</span><span style="color:var(--white);font-size:0.78rem;">{{ product.warehouse.address }}</span></div>
+    {% endif %}
+    <div class="kv-row"><span class="kv-label">Agent</span><span style="color:var(--white);">{% if product.assigned_agent %}{{ product.assigned_agent.full_name|default:product.assigned_agent.user.email }}{% else %}Not assigned{% endif %}</span></div>
+    {% if product.assigned_agent and product.assigned_agent.warehouse %}
+    <div class="kv-row"><span class="kv-label">Agent Warehouse</span><span style="color:var(--white);font-size:0.78rem;">{{ product.assigned_agent.warehouse }}</span></div>
+    {% endif %}
+    {% if product.received_at %}
+    <div class="kv-row"><span class="kv-label">Received At</span><span class="mono" style="color:var(--white);font-size:0.78rem;">{{ product.received_at|date:"M d, Y H:i" }}</span></div>
+    {% endif %}
+  </div>
+
+  <div class="panel panel-body stack">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">VENDOR INFO</h3>
+    <div class="kv-row"><span class="kv-label">Business</span><span style="color:var(--white);">{{ product.vendor.vendorprofile.business_name|default:"—" }}</span></div>
+    <div class="kv-row"><span class="kv-label">Email</span><span class="mono" style="color:var(--white);font-size:0.78rem;">{{ product.vendor.email }}</span></div>
+    <div class="kv-row"><span class="kv-label">Customer Location</span><span style="color:var(--white);">{{ product.customer_location|default:"—" }}</span></div>
+  </div>
+
+  {% if product.image %}
+  <div class="panel panel-body stack">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">IMAGE</h3>
+    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:100%;border-radius:8px;" />
+  </div>
+  {% endif %}
+</div>
+
+<div style="margin-top:20px;display:flex;gap:12px;max-width:860px;">
+  {% if product.status == 'received' and not product.assigned_agent %}
+  <div class="panel panel-body" style="flex:1;">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">ASSIGN AGENT</h3>
+    <form method="post" style="display:flex;gap:6px;align-items:flex-end;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="assign_agent" />
+      <input type="hidden" name="product_id" value="{{ product.id }}" />
+      <div style="flex:1;">
+        <label class="form-label">Delivery Agent</label>
+        <select name="agent_id" class="form-input" style="font-size:0.78rem;">
+          <option value="">None</option>
+          {% for agent in agents %}
+          <option value="{{ agent.id }}">
+            {{ agent.full_name|default:agent.user.email }}{% if agent.address %} — {{ agent.address }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-solid" data-confirm="Assign agent to '{{ product.name }}'?"><i class="ri-user-add-line"></i> Assign</button>
+    </form>
+  </div>
+  {% elif product.assigned_agent %}
+  <div class="panel panel-body" style="flex:1;">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">ASSIGNED AGENT</h3>
+    <div class="kv-row"><span class="kv-label">Agent</span><span class="mono" style="color:var(--lime);">{{ product.assigned_agent.full_name|default:product.assigned_agent.user.email }}</span></div>
+    {% if product.assigned_agent.address %}
+    <div class="kv-row"><span class="kv-label">Address</span><span style="color:var(--white);font-size:0.78rem;">{{ product.assigned_agent.address }}</span></div>
+    {% endif %}
+    {% if product.assigned_agent.warehouse %}
+    <div class="kv-row"><span class="kv-label">Warehouse</span><span style="color:var(--white);font-size:0.78rem;">{{ product.assigned_agent.warehouse }}</span></div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if product.status == 'pending' and user.role == 'manager' %}
+  <div class="panel panel-body" style="flex:1;">
+    <h3 style="font-size:0.78rem;color:var(--lime);margin-bottom:12px;">RECEIVE STOCK</h3>
+    <form method="post" style="display:flex;gap:6px;align-items:flex-end;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="receive_stock" />
+      <input type="hidden" name="product_id" value="{{ product.id }}" />
+      <div style="flex:1;">
+        <label class="form-label">Warehouse</label>
+        <select name="warehouse" class="form-input" required style="font-size:0.78rem;">
+          <option value="">Select warehouse...</option>
+          {% for w in warehouses %}
+          <option value="{{ w.id }}">{{ w.name }} — {{ w.address|truncatechars:30 }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-solid"><i class="ri-inbox-archive-line"></i> Receive</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<div style="margin-top:16px;max-width:860px;">
+  <form method="post" action="{% url 'vendor:manager_product_delete' product.id %}" data-confirm="Permanently delete '{{ product.name }}'? This cannot be undone.">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline" style="border-color:var(--red);color:var(--red);"><i class="ri-delete-bin-line"></i> Delete Product</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+﻿<a href="{% url 'agent:dashboard' %}" class="side-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="ri-dashboard-line"></i> Dashboard</a>
+<a href="{% url 'agent:inventory' %}" class="side-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}"><i class="ri-archive-line"></i> My Inventory</a>
+<a href="{% url 'agent:deliveries' %}" class="side-link {% if request.resolver_match.url_name == 'deliveries' or request.resolver_match.url_name == 'agent_detail' or request.resolver_match.url_name == 'pickup' or request.resolver_match.url_name == 'mark_delivered' or request.resolver_match.url_name == 'mark_failed' %}active{% endif %}">
+  <i class="ri-route-line"></i> My Deliveries
+  {% if pending_counts.active_deliveries %}<span class="count-pill">{{ pending_counts.active_deliveries }}</span>{% endif %}
+</a>
+<a href="{% url 'agent:vendor_orders' %}" class="side-link {% if request.resolver_match.url_name == 'vendor_orders' %}active{% endif %}"><i class="ri-shopping-bag-3-line"></i> Vendor Orders</a>

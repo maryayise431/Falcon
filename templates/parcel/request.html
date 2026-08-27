@@ -1,0 +1,46 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block title %}Send a Parcel{% endblock %}
+{% block topbar_title %}Send a Parcel{% endblock %}
+{% block sidebar_nav %}{% if user.role == 'vendor' %}{% include "partials/sidebar_vendor.html" %}{% else %}{% include "partials/sidebar_customer.html" %}{% endif %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; DOOR TO DOOR /&gt;</p>
+    <h1 class="page-title">SEND A PARCEL</h1>
+    <p class="page-sub">Tell us what you're sending and where it's going. A Falcon manager quotes your delivery fee — usually within minutes.</p>
+  </div>
+  <a href="{% url 'parcel:history' %}" class="btn btn-outline"><i class="ri-arrow-left-line"></i> My Parcels</a>
+</div>
+
+<div class="panel" style="max-width:780px;">
+  <form method="post" enctype="multipart/form-data" novalidate class="panel-body stack">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-solid">Request Pickup <i class="ri-send-plane-2-line"></i></button>
+    {% if not PAYSTACK_ENABLED %}
+    <p class="notice-strip" style="margin-bottom:0;"><i class="ri-flask-line"></i> Dev mode: quote acceptance will auto-confirm payment (no Paystack key).</p>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/maps.js' %}"></script>
+<script>
+(function(){
+  var type = document.querySelector('[name="pickup_type"]');
+  var pickupGroup = document.querySelector('[name="pickup_address"]')?.closest('.form-group');
+  var warehouseGroup = document.querySelector('[name="dropoff_warehouse"]')?.closest('.form-group');
+  if (!type || !pickupGroup || !warehouseGroup) return;
+  function toggle(){
+    var dropoff = type.value === 'drop_off';
+    pickupGroup.style.display = dropoff ? 'none' : '';
+    warehouseGroup.style.display = dropoff ? '' : 'none';
+  }
+  type.addEventListener('change', toggle);
+  toggle();
+})();
+</script>
+{% endblock %}

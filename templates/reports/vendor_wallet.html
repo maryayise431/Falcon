@@ -1,0 +1,47 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}My Reports · Wallet{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">WALLET STATEMENT</h1></div>
+  <form method="get" class="filter-bar">
+    <select name="period" id="period-select" class="form-input">
+      {% for value, label in period_choices %}
+      <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">CREDITS</span><span class="stat-value green">+&#8358;{{ credits|floatformat:0 }}</span></div>
+  <div class="stat-card"><span class="stat-label">DEBITS</span><span class="stat-value text-red">&#8358;{{ debits|floatformat:0 }}</span></div>
+</div>
+
+<div class="panel">
+  {% if transactions %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>TYPE</th><th>DETAILS</th><th>AMOUNT</th><th>DATE</th></tr></thead>
+      <tbody>
+        {% for tx in transactions %}
+        <tr>
+          <td><span class="ref-code">{{ tx.transaction_ref }}</span></td>
+          <td>{{ tx.get_transaction_type_display }}</td>
+          <td style="font-size:0.78rem;color:var(--grey);">{% if tx.related_order %}<span class="mono text-green" style="font-size:0.68rem;">{{ tx.related_order.order_reference }}</span>{% else %}{{ tx.reason|default:"—"|truncatechars:30 }}{% endif %}</td>
+          <td class="mono {% if tx.transaction_type == 'credit' %}text-lime{% else %}text-red{% endif %}">{% if tx.transaction_type == 'credit' %}+{% else %}-{% endif %}&#8358;{{ tx.amount|floatformat:2 }}</td>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ tx.created_at|date:"d M H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-wallet-3-line"></i>No transactions in this window.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

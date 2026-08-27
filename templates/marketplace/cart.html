@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:44px;">
+  <div class="container" style="max-width:860px;">
+    <p class="eyebrow mono">&lt; YOUR PICKS /&gt;</p>
+    <h1 class="display-md mb-24">CART</h1>
+
+    {% if cart.entries %}
+    <div class="panel">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>PRODUCT</th><th>PRICE</th><th>QTY</th><th>SUBTOTAL</th><th></th></tr></thead>
+          <tbody>
+            {% for entry in cart.entries %}
+            <tr>
+              <td>
+                <a href="{% url 'marketplace:product_detail' entry.product.slug %}" style="color:var(--white);font-weight:600;">{{ entry.product.name }}</a>
+              </td>
+              <td class="mono">&#8358;{{ entry.product.price|floatformat:2 }}</td>
+              <td>
+                <form method="post" action="{% url 'marketplace:cart' %}" class="flex" style="gap:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update" />
+                  <input type="hidden" name="product_id" value="{{ entry.product.id }}" />
+                  <input type="number" name="quantity" value="{{ entry.quantity }}" min="0" max="{{ entry.product.stock }}" class="form-input" style="width:72px;" />
+                  <button type="submit" class="btn btn-outline btn-sm"><i class="ri-refresh-line"></i></button>
+                </form>
+              </td>
+              <td class="mono">&#8358;{{ entry.subtotal|floatformat:2 }}</td>
+              <td>
+                <form method="post" action="{% url 'marketplace:cart' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="remove" />
+                  <input type="hidden" name="product_id" value="{{ entry.product.id }}" />
+                  <button type="submit" class="topbar-icon" aria-label="Remove"><i class="ri-delete-bin-6-line"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-head">
+        <form method="post" action="{% url 'marketplace:cart' %}" data-confirm="Empty your entire cart?">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="clear" />
+          <button type="submit" class="btn btn-outline">Clear Cart</button>
+        </form>
+        <div class="flex" style="gap:16px;">
+          <span class="mono text-grey" style="font-size:0.7rem;">TOTAL</span>
+          <span class="stat-value green">{{ cart.total_display }}</span>
+          {% if user.is_authenticated and user.role == 'customer' %}
+          <a href="{% url 'marketplace:checkout' %}" class="btn btn-solid">Checkout <i class="ri-arrow-right-line"></i></a>
+          {% else %}
+          <a href="{% url 'accounts:login' %}" class="btn btn-solid">Sign In to Checkout</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state panel" style="padding:70px 20px;">
+      <i class="ri-shopping-cart-2-line"></i>
+      <h3 style="margin-bottom:6px;">Your cart is empty</h3>
+      <p>Browse the marketplace and add something you love.</p>
+      <a href="{% url 'marketplace:home' %}" class="btn btn-solid mt-16">Go Shopping <i class="ri-arrow-right-line"></i></a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

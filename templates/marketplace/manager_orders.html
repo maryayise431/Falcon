@@ -1,0 +1,43 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Marketplace Orders{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">MARKETPLACE ORDERS</h1></div>
+  <form method="get" class="filter-bar">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Search ref..." class="form-input" />
+    <select name="status" class="form-input" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>CUSTOMER</th><th>DATE</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'marketplace:manager_order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.customer.email|truncatechars:24 }}</td>
+          <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+          <td class="mono">&#8358;{{ order.total_amount|floatformat:2 }}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          <td><a href="{% url 'marketplace:manager_order_detail' order.order_reference %}" class="mono text-green" style="font-size:0.68rem;">MANAGE <i class="ri-arrow-right-line"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No orders found.</div>
+  {% endif %}
+</div>
+{% endblock %}

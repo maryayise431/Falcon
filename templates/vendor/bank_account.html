@@ -1,0 +1,238 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Bank Account{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">PAYOUT BANK ACCOUNT</h1>
+    <p class="page-sub">Account details are verified against Paystack before withdrawals unlock.</p>
+  </div>
+</div>
+
+{% if profile.bank_verified and profile.bank_name %}
+<div class="panel" style="max-width:560px;">
+  <div class="panel-body stack" style="gap:16px;">
+    <div class="flex-between" style="align-items:center;">
+      <h3 style="font-size:0.78rem;color:var(--lime);">VERIFIED ACCOUNT</h3>
+      <span class="status-badge st-delivered"><i class="ri-checkbox-circle-fill"></i> Verified</span>
+    </div>
+    <div class="kv-row"><span class="kv-key">Bank</span><span class="kv-val">{{ profile.bank_name }}</span></div>
+    <div class="kv-row"><span class="kv-key">Account Number</span><span class="kv-val mono">{{ profile.bank_account_number }}</span></div>
+    <div class="kv-row"><span class="kv-key">Account Name</span><span class="kv-val">{{ profile.account_name }}</span></div>
+    <div style="border-top:1px dashed var(--border);padding-top:14px;">
+      <button type="button" id="changeBankBtn" class="btn btn-outline w-100" onclick="document.getElementById('bankForm').style.display='block';this.style.display='none';"><i class="ri-pencil-line"></i> Change Bank Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="bankForm" style="display:none;max-width:560px;">
+{% else %}
+<div id="bankForm" style="max-width:560px;">
+{% endif %}
+
+<div class="panel">
+  <form method="post" novalidate data-confirm="Save this payout account?" class="panel-body stack">
+    {% csrf_token %}
+    {{ form.bank_name }}
+    {{ form.bank_code }}
+
+    <div class="form-group bank-field" id="bankField">
+      <label for="bank-search">Bank Name</label>
+      <input type="text" id="bank-search" class="form-input" autocomplete="off"
+             placeholder="Start typing your bank&hellip;"
+             value="{{ profile.bank_name|default:'' }}">
+      <div class="bank-suggest" id="bankSuggest" role="listbox"></div>
+      {% for error in form.bank_name.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.account_number.id_for_label }}">{{ form.account_number.label }}</label>
+      {{ form.account_number }}
+      {% for error in form.account_number.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.account_name.id_for_label }}">Account Name</label>
+      {{ form.account_name }}
+      <p class="mono text-grey" style="font-size:0.62rem;margin:4px 0 0;">Enter your bank name and account number, then click Verify to populate this field.</p>
+      {% for error in form.account_name.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div class="flex gap-8">
+      <button type="button" id="verifyBtn" class="btn btn-outline" disabled>
+        <i class="ri-shield-check-line"></i> Verify Account
+      </button>
+      <div id="verifyStatus" class="verify-line"></div>
+    </div>
+
+    <button type="submit" class="btn btn-solid">Save Account <i class="ri-save-line"></i></button>
+    <p class="mono text-grey" style="font-size:0.62rem;margin:0;">We run a &#8358;0 name enquiry &mdash; your account is never debited during verification.</p>
+  </form>
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var bankInput = document.getElementById('bank-search');
+  var suggestBox = document.getElementById('bankSuggest');
+  var bankCodeInput = document.getElementById('id_bank_code');
+  var accountInput = document.querySelector('[name="account_number"]');
+  var nameInput = document.querySelector('[name="account_name"]');
+  if (nameInput) { nameInput.readOnly = true; nameInput.style.backgroundColor = 'var(--card-light)'; }
+  var bankNameInput = document.getElementById('id_bank_name');
+  var verifyBtn = document.getElementById('verifyBtn');
+  var verifyStatus = document.getElementById('verifyStatus');
+  if (!bankInput || !suggestBox || !bankCodeInput) return;
+
+  var BANKS = [];
+  var filtered = [];
+  var highlightIdx = -1;
+
+  function setVerify(state, text) {
+    verifyStatus.className = 'verify-line ' + state;
+    verifyStatus.innerHTML = text || '';
+  }
+
+  fetch("{% url 'vendor:api_banks' %}", { headers: { 'X-Requested-With': 'fetch' } })
+    .then(function(r){ return r.json(); })
+    .then(function(data){ BANKS = data.banks || []; })
+    .catch(function(){ BANKS = []; });
+
+  function renderSuggestions() {
+    suggestBox.innerHTML = '';
+    highlightIdx = -1;
+    if (!filtered.length) {
+      var none = document.createElement('div');
+      none.className = 'bank-option none';
+      none.textContent = 'No matching bank';
+      suggestBox.appendChild(none);
+    } else {
+      filtered.forEach(function(b, i) {
+        var opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'bank-option' + (i === highlightIdx ? ' highlighted' : '');
+        opt.setAttribute('role', 'option');
+        opt.innerHTML = '<i class="ri-bank-line"></i>' + b.name;
+        opt.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          selectBank(b);
+        });
+        suggestBox.appendChild(opt);
+      });
+    }
+    suggestBox.classList.add('open');
+  }
+
+  function selectBank(bank) {
+    bankInput.value = bank.name;
+    bankCodeInput.value = bank.code;
+    if (bankNameInput) bankNameInput.value = bank.name;
+    suggestBox.classList.remove('open');
+    setVerify('', '');
+    updateVerifyBtn();
+  }
+
+  function updateVerifyBtn() {
+    var hasBank = bankCodeInput.value.length > 0;
+    var hasAccount = accountInput && accountInput.value.length === 10;
+    verifyBtn.disabled = !(hasBank && hasAccount);
+  }
+
+  bankInput.addEventListener('input', function() {
+    bankCodeInput.value = '';
+    if (bankNameInput) bankNameInput.value = '';
+    var q = bankInput.value.trim().toLowerCase();
+    filtered = q
+      ? BANKS.filter(function(b){ return b.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 8)
+      : BANKS.slice(0, 8);
+    renderSuggestions();
+    setVerify('', '');
+    updateVerifyBtn();
+  });
+
+  bankInput.addEventListener('focus', function() {
+    var q = bankInput.value.trim().toLowerCase();
+    filtered = q
+      ? BANKS.filter(function(b){ return b.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 8)
+      : BANKS.slice(0, 8);
+    renderSuggestions();
+  });
+
+  bankInput.addEventListener('blur', function() {
+    setTimeout(function(){ suggestBox.classList.remove('open'); }, 120);
+  });
+
+  bankInput.addEventListener('keydown', function(e) {
+    var options = suggestBox.querySelectorAll('.bank-option:not(.none)');
+    if (!suggestBox.classList.contains('open') || !options.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlightIdx = e.key === 'ArrowDown'
+        ? Math.min(highlightIdx + 1, options.length - 1)
+        : Math.max(highlightIdx - 1, 0);
+      options.forEach(function(o, i){ o.classList.toggle('highlighted', i === highlightIdx); });
+    } else if (e.key === 'Enter' && highlightIdx >= 0) {
+      e.preventDefault();
+      options[highlightIdx].dispatchEvent(new Event('mousedown'));
+    } else if (e.key === 'Escape') {
+      suggestBox.classList.remove('open');
+    }
+  });
+
+  if (accountInput) {
+    accountInput.addEventListener('input', function() {
+      accountInput.value = accountInput.value.replace(/[^0-9]/g, '').slice(0, 10);
+      updateVerifyBtn();
+    });
+  }
+
+  verifyBtn.addEventListener('click', function() {
+    if (verifyBtn.disabled) return;
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="ri-loader-4-line"></i> Verifying&hellip;';
+    setVerify('', '');
+
+    var url = "{% url 'vendor:api_verify_bank' %}?account_number=" +
+      encodeURIComponent(accountInput.value) + "&bank_code=" + encodeURIComponent(bankCodeInput.value);
+
+    fetch(url, { headers: { 'X-Requested-With': 'fetch' } })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data.verified && data.account_name) {
+          var msg = '<i class="ri-checkbox-circle-fill"></i> ' + data.account_name;
+          if (data.simulated && data.warning) {
+            msg += ' <span style="font-size:0.6rem;color:var(--gold);">(Simulated \u2014 Paystack test limit)</span>';
+          }
+          setVerify('ok', msg);
+          if (nameInput) { nameInput.value = data.account_name; nameInput.readOnly = true; }
+        } else {
+          var errMsg = data.error || 'Account not found. Check the number and bank.';
+          setVerify('bad', '<i class="ri-close-circle-fill"></i> ' + errMsg);
+          if (nameInput) { nameInput.readOnly = false; nameInput.value = ''; }
+        }
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="ri-shield-check-line"></i> Verify Account';
+      })
+      .catch(function() {
+        setVerify('bad', '<i class="ri-wifi-off-line"></i> Could not verify right now. Try again.');
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="ri-shield-check-line"></i> Verify Account';
+      });
+  });
+
+  var form = bankInput.closest('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      if (!bankCodeInput.value.trim()) {
+        e.preventDefault();
+        bankInput.focus();
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

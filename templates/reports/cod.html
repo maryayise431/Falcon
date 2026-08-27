@@ -1,0 +1,73 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}COD Ledger{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; CUSTODIAL CASH /&gt;</p>
+    <h1 class="page-title">COD LEDGER</h1>
+  </div>
+  <div class="page-actions">
+    <form method="get" class="filter-bar">
+      <select name="period" id="period-select" class="form-input">
+        {% for value, label in period_choices %}
+        <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="?{% if period %}period={{ period }}&amp;{% endif %}export=csv" class="btn btn-outline"><i class="ri-download-2-line"></i> CSV</a>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">COLLECTED BY AGENTS</span><span class="stat-value">&#8358;{{ collected_total|floatformat:0 }}</span><i class="ri-hand-coin-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">CONFIRMED &amp; SETTLED</span><span class="stat-value green">&#8358;{{ confirmed_total|floatformat:0 }}</span><i class="ri-shield-check-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">VARIANCE (UNCONFIRMED)</span><span class="stat-value {% if confirmed_total != collected_total %}text-red{% endif %}">&#8358;{{ collected_total|floatformat:0 }}</span></div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">PER AGENT</span></div>
+    {% if per_agent %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>AGENT</th><th>DELIVERIES</th><th>COD COLLECTED</th></tr></thead>
+        <tbody>
+          {% for row in per_agent %}
+          <tr>
+            <td>{{ row.agent__full_name|default:"Unnamed agent" }}</td>
+            <td class="mono">{{ row.deliveries }}</td>
+            <td class="mono text-lime">&#8358;{{ row.collected|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="table-empty"><i class="ri-route-line"></i>No COD deliveries in this window.</div>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">DELIVERY LOG</span><span class="mono text-grey" style="font-size:0.62rem;">LAST 300</span></div>
+    {% if assignments %}
+    <ul style="list-style:none;">
+      {% for assignment in assignments|slice:":20" %}
+      <li style="display:flex;justify-content:space-between;padding:10px 20px;border-bottom:1px solid rgba(42,61,44,0.5);font-size:0.78rem;align-items:center;">
+        <a href="{% url 'tracking:detail' assignment.reference %}" class="ref-code">{{ assignment.reference }}</a>
+        <span style="color:var(--grey);">{{ assignment.agent.full_name|default:assignment.agent.user.email|truncatechars:12 }}</span>
+        <span class="mono">&#8358;{{ assignment.cod_collected|floatformat:0 }}</span>
+        <span class="status-badge st-delivered">{{ assignment.delivered_at|date:"d M H:i" }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="table-empty"><i class="ri-inbox-line"></i>No entries.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

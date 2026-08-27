@@ -1,0 +1,39 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}Create Order for Vendor{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">CREATE ORDER FOR VENDOR</h1>
+    <p class="page-sub">Phone-in and walk-in orders: pick a vendor's warehouse stock, set the COD amount, and Falcon handles the rest. Order starts in <strong>processing</strong>.</p>
+  </div>
+  <a href="{% url 'vendor:manager_vendor_orders' %}" class="btn btn-outline"><i class="ri-arrow-left-line"></i> All Orders</a>
+</div>
+
+<div class="panel" style="max-width:760px;">
+  {% if vendors %}
+  <form method="get" class="panel-body flex" style="border-bottom:1px solid var(--border);flex-wrap:wrap;">
+    <label class="mono text-grey" style="font-size:0.62rem;letter-spacing:0.1em;">VENDOR</label>
+    <select name="vendor" class="form-input" onchange="this.form.submit()" style="flex:1;min-width:200px;">
+      <option value="">— Choose vendor —</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}" {% if selected_vendor == vendor.id|stringformat:"s" %}selected{% endif %}>{{ vendor.vendorprofile.business_name|default:vendor.email }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <form method="post" novalidate class="panel-body stack">
+    {% csrf_token %}
+    <input type="hidden" name="vendor_hidden" value="{{ selected_vendor }}" />
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-solid" {% if not selected_vendor %}disabled{% endif %}>Create Order <i class="ri-shopping-bag-3-line"></i></button>
+  </form>
+  {% else %}
+  <div class="table-empty"><i class="ri-store-2-line"></i>No vendors registered yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/maps.js' %}"></script>{% endblock %}

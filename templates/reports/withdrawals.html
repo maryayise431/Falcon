@@ -1,0 +1,54 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}Payouts Report{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">WITHDRAWAL REPORT</h1></div>
+  <div class="page-actions">
+    <form method="get" class="filter-bar">
+      <select name="period" id="period-select" class="form-input">
+        {% for value, label in period_choices %}
+        <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="?{% if period %}period={{ period }}&amp;{% endif %}export=csv" class="btn btn-outline"><i class="ri-download-2-line"></i> CSV</a>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">CHARGES EARNED</span><span class="stat-value green">&#8358;{{ charges_revenue|floatformat:0 }}</span><i class="ri-scissors-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">TRANSFERRED TO VENDORS</span><span class="stat-value">&#8358;{{ transferred|floatformat:0 }}</span><i class="ri-bank-card-line stat-icon"></i></div>
+  {% for status, count in counts.items %}
+  <div class="stat-card"><span class="stat-label">{{ status|upper }}</span><span class="stat-value">{{ count }}</span></div>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  {% if withdrawals %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>DATE</th><th>VENDOR</th><th>AMOUNT</th><th>CHARGE</th><th>PAYOUT</th><th>STATUS</th></tr></thead>
+      <tbody>
+        {% for w in withdrawals %}
+        <tr>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ w.requested_at|date:"d M H:i" }}</td>
+          <td>{{ w.vendor.vendorprofile.business_name|default:w.vendor.email|truncatechars:18 }}</td>
+          <td class="mono">&#8358;{{ w.amount_requested|floatformat:0 }}</td>
+          <td class="mono text-grey">-&#8358;{{ w.withdrawal_charge|floatformat:0 }}</td>
+          <td class="mono text-lime">&#8358;{{ w.amount_transferred|floatformat:2 }}</td>
+          <td><span class="status-badge st-{{ w.status }}">{{ w.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No withdrawals in this window.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

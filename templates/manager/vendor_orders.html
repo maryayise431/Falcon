@@ -1,0 +1,47 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Fulfilment Orders{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">FULFILMENT ORDERS</h1></div>
+  <div class="page-actions">
+    <form method="get" class="filter-bar">
+      <input type="text" name="q" value="{{ search_query }}" placeholder="Ref / customer / vendor..." class="form-input" />
+      <select name="status" class="form-input" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="{% url 'vendor:manager_vendor_order_create' %}" class="btn btn-solid">Create Order <i class="ri-add-line"></i></a>
+  </div>
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>VENDOR</th><th>CUSTOMER</th><th>COD</th><th>AGENT</th><th>STATUS</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'vendor:manager_vendor_order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.vendor.vendorprofile.business_name|default:order.vendor.email|truncatechars:18 }}</td>
+          <td>{{ order.customer_name|truncatechars:16 }}</td>
+          <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
+          <td>{% if order.assigned_agent %}{{ order.assigned_agent.full_name|default:order.assigned_agent.user.email|truncatechars:14 }}{% else %}<span class="text-grey">—</span>{% endif %}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No orders found.</div>
+  {% endif %}
+</div>
+{% endblock %}
+

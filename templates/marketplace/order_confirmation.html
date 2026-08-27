@@ -1,0 +1,72 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Order Confirmation{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_customer.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="track-result">
+  <div style="text-align:center;" class="mb-24">
+    {% if order.status == 'cancelled' %}
+    <i class="ri-close-circle-line" style="font-size:3.4rem;color:#e74c3c;"></i>
+    {% elif order.status == 'awaiting_fee' %}
+    <i class="ri-time-line" style="font-size:3.4rem;color:var(--yellow, #f39c12);"></i>
+    {% else %}
+    <i class="ri-checkbox-circle-line" style="font-size:3.4rem;color:var(--green);"></i>
+    {% endif %}
+    <h1 class="display-md mt-8">
+      {% if order.status == 'cancelled' %}ORDER CANCELLED
+      {% elif order.status == 'awaiting_fee' %}AWAITING DELIVERY FEE
+      {% else %}ORDER {{ order.order_reference }}{% endif %}
+    </h1>
+    <p class="page-sub" style="margin:0 auto;">
+      {% if order.status == 'pending' %}Payment is being confirmed. This page updates once your payment clears.
+      {% elif order.status == 'awaiting_fee' and not order.delivery_fee_set_at %}Your order is placed. A manager is setting the delivery fee — you can pay once it's ready.
+      {% elif order.status == 'awaiting_fee' %}Delivery fee has been set! You can now complete your payment.
+      {% elif order.status == 'cancelled' %}This order was cancelled and stock has been returned.
+      {% else %}Thanks for shopping with Falcon!{% endif %}
+    </p>
+  </div>
+
+  <div class="panel mb-16">
+    <div class="panel-head"><span class="panel-title">SUMMARY</span>
+      <span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span>
+    </div>
+    <div class="panel-body stack">
+      {% for item in order.items.all %}
+      <div class="flex-between"><span>{{ item.product_name }} &times; {{ item.quantity }}</span><span class="mono">&#8358;{{ item.subtotal|floatformat:2 }}</span></div>
+      {% endfor %}
+      <div class="kv-row" style="border-top:1px solid var(--border);"><span class="kv-key">Product Total</span><span class="kv-val mono">&#8358;{{ order.product_total|floatformat:2 }}</span></div>
+      {% if order.delivery_fee or order.delivery_method == 'door_delivery' %}
+      <div class="kv-row"><span class="kv-key">Delivery Fee</span><span class="kv-val mono">{% if order.delivery_fee %}&#8358;{{ order.delivery_fee|floatformat:2 }}{% else %}—{% endif %}</span></div>
+      {% endif %}
+      <div class="kv-row" style="border-top:1px solid var(--border);"><span class="kv-key" style="font-weight:700;">Total{% if order.status == 'awaiting_fee' %} to Pay{% else %} Paid{% endif %}</span><span class="kv-val green mono" style="font-weight:700;">&#8358;{{ order.total_amount|floatformat:2 }}</span></div>
+      <div class="kv-row"><span class="kv-key">Delivery Method</span><span class="kv-val">{{ order.get_delivery_method_display }}</span></div>
+      {% if order.delivery_method == 'pickup' and order.pickup_warehouse %}
+      <div class="kv-row"><span class="kv-key">Pickup Location</span><span class="kv-val">{{ order.pickup_warehouse.name }} — {{ order.pickup_warehouse.address }}</span></div>
+      {% endif %}
+      {% if order.delivery_address %}
+      <div class="kv-row"><span class="kv-key">Deliver To</span><span class="kv-val">{{ order.delivery_address|truncatechars:60 }}</span></div>
+      {% endif %}
+      {% if order.receiver_phone %}
+      <div class="kv-row"><span class="kv-key">Receiver</span><span class="kv-val mono">{{ order.receiver_phone }}</span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="page-actions" style="justify-content:center;flex-wrap:wrap;gap:10px;">
+    <a href="{% url 'tracking:detail' order.order_reference %}" class="btn btn-solid">Track Order <i class="ri-radar-line"></i></a>
+    <a href="{% url 'customer:dashboard' %}" class="btn btn-outline">My Dashboard</a>
+    {% if order.status == 'awaiting_fee' and order.delivery_fee_set_at %}
+    <form method="post" action="{% url 'marketplace:customer_pay_order' order.order_reference %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-solid">Pay &#8358;{{ order.total_amount|floatformat:2 }} Now <i class="ri-shield-check-line"></i></button>
+    </form>
+    {% endif %}
+    {% if order.status == 'pending' or order.status == 'awaiting_fee' %}
+    <form method="post" action="{% url 'marketplace:cancel_order' order.order_reference %}" data-confirm="Cancel this order? Stock will be returned to the store.">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Cancel Order</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create Account{% endblock %}
+{% block body_class %}auth-bare{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="bare-auth-wrap bare-auth-wide">
+  <img src="{% static 'images/logo.png' %}" alt="Falcon" class="auth-logo" />
+
+  <div class="reg-switch{% if initial_tab == 'vendor' %} vendor-active{% endif %}" role="tablist" aria-label="Account type">
+    <span class="reg-slider" aria-hidden="true"></span>
+    <button type="button" data-tab="customer" role="tab" aria-selected="{% if initial_tab == 'vendor' %}false{% else %}true{% endif %}">
+      <i class="ri-user-3-line"></i> Customer
+    </button>
+    <button type="button" data-tab="vendor" role="tab" aria-selected="{% if initial_tab == 'vendor' %}true{% else %}false{% endif %}">
+      <i class="ri-store-2-line"></i> Vendor
+    </button>
+  </div>
+
+  <section class="reg-pane auth-card{% if initial_tab == 'vendor' %} hidden{% endif %}" data-pane="customer">
+    {% if customer_form.non_field_errors %}<div class="form-errors">{{ customer_form.non_field_errors }}</div>{% endif %}
+    <form method="post" action="{% url 'accounts:register_customer' %}" novalidate>
+      {% csrf_token %}
+      {% for field in customer_form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-solid w-100 mt-16">Create Customer Account <i class="ri-arrow-right-line"></i></button>
+    </form>
+    <a href="{% url 'accounts:login' %}" class="bare-link">Already have an account?</a>
+  </section>
+
+  <section class="reg-pane auth-card{% if initial_tab != 'vendor' %} hidden{% endif %}" data-pane="vendor">
+    {% if vendor_form.non_field_errors %}<div class="form-errors">{{ vendor_form.non_field_errors }}</div>{% endif %}
+    <form method="post" action="{% url 'accounts:register_vendor' %}" novalidate>
+      {% csrf_token %}
+      {% for field in vendor_form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-solid w-100 mt-16">Create Vendor Account <i class="ri-store-2-line"></i></button>
+    </form>
+    <a href="{% url 'accounts:login' %}" class="bare-link">Already have an account?</a>
+  </section>
+</div>
+
+<script>
+  (function () {
+    var init = function () {
+      var sw = document.querySelector(".reg-switch");
+      if (!sw || sw.dataset.bound) return;
+      sw.dataset.bound = "1";
+      var btns = sw.querySelectorAll("[data-tab]");
+      var panes = document.querySelectorAll(".reg-pane");
+      function activate(tab) {
+        sw.classList.toggle("vendor-active", tab === "vendor");
+        btns.forEach(function (b) {
+          var on = b.dataset.tab === tab;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        panes.forEach(function (p) { p.classList.toggle("hidden", p.dataset.pane !== tab); });
+        try { history.replaceState(null, "", "#" + tab); } catch (e) {}
+      }
+      btns.forEach(function (b) { b.addEventListener("click", function () { activate(b.dataset.tab); }); });
+      if (location.hash === "#vendor") activate("vendor");
+      else if (location.hash === "#customer") activate("customer");
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+  })();
+</script>
+{% endblock %}

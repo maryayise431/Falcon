@@ -1,0 +1,71 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}User Management{% endblock %}
+{% block sidebar_nav %}{% if user.role == 'manager' %}{% include "partials/sidebar_manager.html" %}{% else %}{% include "partials/sidebar_submanager.html" %}{% endif %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; ACCOUNTS /&gt;</p>
+    <h1 class="page-title">USER MANAGEMENT</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Search email, name, business..." class="form-input" />
+    <select name="role" class="form-input" onchange="this.form.submit()">
+      <option value="">All roles</option>
+      {% for value, label in role_choices %}
+      <option value="{{ value }}" {% if active_role == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if users %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>EMAIL</th><th>ROLE</th><th>PROFILE</th><th>JOINED</th><th>STATUS</th><th style="text-align:right;">ACTIONS</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td><span class="status-badge st-processing">{{ u.get_role_display }}</span></td>
+          <td style="color:var(--grey);font-size:0.78rem;">
+            {% if u.customerprofile %}{{ u.customerprofile.full_name }}
+            {% elif u.vendorprofile %}{{ u.vendorprofile.business_name }}
+            {% elif u.deliveryagentprofile %}{{ u.deliveryagentprofile.full_name }}
+            {% elif u.managerprofile %}{{ u.managerprofile.full_name }}
+            {% elif u.submanagerprofile %}{{ u.submanagerprofile.full_name }}
+            {% else %}&mdash;{% endif %}
+          </td>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ u.date_joined|date:"d M Y" }}</td>
+          <td>
+            {% if u.is_active %}<span class="status-badge st-delivered">Active</span>
+            {% else %}<span class="status-badge st-failed">Disabled</span>{% endif %}
+          </td>
+          <td style="text-align:right;">
+            {% if user.is_superuser or user.role == 'manager' %}
+            <div class="flex" style="gap:8px;justify-content:flex-end;">
+              {% if u.pk != user.pk %}
+              <form method="post" action="{% url 'manager_user_toggle' u.pk %}" data-confirm="{% if u.is_active %}Disable {{ u.email }}? They will be signed out and blocked.{% else %}Re-enable {{ u.email }}?{% endif %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline btn-sm">{% if u.is_active %}Disable{% else %}Enable{% endif %}</button>
+              </form>
+              <form method="post" action="{% url 'manager_user_delete' u.pk %}" data-confirm="Permanently delete {{ u.email }}? This cannot be undone.">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-sm text-red">Delete</button>
+              </form>
+              {% endif %}
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-user-search-line"></i>No users match.</div>
+  {% endif %}
+</div>
+{% endblock %}

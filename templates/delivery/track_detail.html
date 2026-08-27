@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Tracking {{ tracking.reference }}{% endblock %}
+
+{% block content %}
+<div class="track-result">
+  <div class="panel">
+    <div class="panel-head" style="flex-wrap:wrap;">
+      <div>
+        <span class="mono text-grey" style="font-size:0.6rem;letter-spacing:0.16em;">{{ tracking.kind|upper }}</span>
+        <h1 class="page-title">{{ tracking.reference }}</h1>
+      </div>
+      <span class="status-badge st-{{ tracking.raw_status }}">{{ tracking.status }}</span>
+    </div>
+
+    <div class="grid-2-even panel-body">
+      <div>
+        {% if tracking.terminal %}
+        <div class="notice-strip"><i class="ri-{% if tracking.terminal == 'failed' or tracking.terminal == 'cancelled' %}close-circle{% else %}information{% endif %}-line"></i> This shipment ended as: <strong>{{ tracking.status }}</strong></div>
+        {% endif %}
+        <ul class="timeline mt-8">
+          {% for step in tracking.timeline.steps %}
+          {% with idx=forloop.counter0 ci=tracking.timeline.current_index|default:99 %}
+          <li class="tl-step {% if tracking.terminal %}{% if idx < ci %}done{% endif %}{% else %}{% if idx < ci %}done{% elif idx == ci %}current{% endif %}{% endif %}">
+            <span class="tl-dot">{% if not tracking.terminal and idx == ci %}{% if step == 'delivered' %}<i class="ri-checkbox-circle-fill" style="font-size:1rem;color:var(--green);"></i>{% else %}<i class="ri-radio-button-fill" style="font-size:0.7rem;color:var(--lime);"></i>{% endif %}{% elif tracking.terminal and idx == ci %}{% if tracking.terminal == 'delivered' %}<i class="ri-checkbox-circle-fill" style="font-size:1rem;color:var(--green);"></i>{% elif tracking.terminal == 'failed' %}<i class="ri-close-circle-fill" style="font-size:1rem;color:var(--red);"></i>{% elif tracking.terminal == 'cancelled' %}<i class="ri-close-circle-fill" style="font-size:1rem;color:var(--grey);"></i>{% endif %}{% endif %}</span>
+            <span class="tl-label">{{ step|title }}</span>
+          </li>
+          {% endwith %}
+          {% endfor %}
+        </ul>
+      </div>
+      <aside>
+        <div class="stack">
+          <div class="kv-row"><span class="kv-key">Receiver</span><span class="kv-val">{{ tracking.receiver|default:"—" }}</span></div>
+          <div class="kv-row"><span class="kv-key">Destination</span><span class="kv-val">{{ tracking.destination_city|default:"—" }}</span></div>
+          {% if tracking.agent %}<div class="kv-row"><span class="kv-key">Agent</span><span class="kv-val">{{ tracking.agent }}</span></div>{% endif %}
+          <div class="kv-row"><span class="kv-key">Created</span><span class="kv-val mono">{{ tracking.created_at|date:"d M Y H:i" }}</span></div>
+          <div class="kv-row"><span class="kv-key">Updated</span><span class="kv-val mono">{{ tracking.updated_at|date:"d M Y H:i" }}</span></div>
+          {% if tracking.items %}
+          <div class="kv-row"><span class="kv-key">Items</span><span class="kv-val">{{ tracking.items|join:", "|truncatechars:60 }}</span></div>
+          {% endif %}
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <p class="auth-footnote">Need help? Contact support@falcon.ng with your reference.</p>
+</div>
+{% endblock %}

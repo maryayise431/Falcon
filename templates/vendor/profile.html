@@ -1,0 +1,72 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Vendor Profile{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; VENDOR /&gt;</p>
+    <h1 class="page-title">PROFILE</h1>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'vendor:bank' %}" class="btn btn-outline">
+      {% if profile.bank_verified %}Update Bank Account{% else %}Add Bank Account{% endif %}
+    </a>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <span class="stat-label">WALLET BALANCE</span>
+    <span class="stat-value green">&#8358;{{ wallet_balance|floatformat:2 }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">TOTAL ORDERS</span>
+    <span class="stat-value mono">{{ total_orders }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">DELIVERED</span>
+    <span class="stat-value mono green">{{ delivered_orders }}</span>
+  </div>
+</div>
+
+<div class="grid-2-even">
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">BUSINESS DETAILS</span></div>
+    <table class="data-table">
+      <tbody>
+        <tr><td style="color:var(--grey);">Business Name</td><td>{{ profile.business_name }}</td></tr>
+        <tr><td style="color:var(--grey);">Username</td><td class="mono">@{{ profile.username }}</td></tr>
+        <tr><td style="color:var(--grey);">Email</td><td>{{ user.email }}</td></tr>
+        <tr>
+          <td style="color:var(--grey);">Verification</td>
+          <td>{% if profile.is_verified %}<span class="status-badge st-delivered">Verified</span>{% else %}<span class="status-badge st-failed">Unverified</span>{% endif %}</td>
+        </tr>
+        <tr><td style="color:var(--grey);">Joined</td><td class="mono">{{ user.date_joined|date:"d M Y" }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">PAYOUT ACCOUNT</span></div>
+    <table class="data-table">
+      <tbody>
+        <tr>
+          <td style="color:var(--grey);">Status</td>
+          <td>{% if profile.bank_verified %}<span class="status-badge st-delivered">Verified</span>{% else %}<span class="status-badge st-pending">Not verified</span>{% endif %}</td>
+        </tr>
+        {% if profile.bank_name %}
+        <tr><td style="color:var(--grey);">Bank</td><td>{{ profile.bank_name }}</td></tr>
+        <tr><td style="color:var(--grey);">Account Number</td><td class="mono">{{ profile.bank_account_number }}</td></tr>
+        <tr><td style="color:var(--grey);">Account Name</td><td>{{ profile.account_name }}</td></tr>
+        {% else %}
+        <tr><td style="color:var(--grey);">&mdash;</td><td style="color:var(--grey);">No bank account added yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+    <div style="padding:0 20px 20px;">
+      <a href="{% url 'vreports:settlements' %}" class="btn btn-ghost btn-sm"><i class="ri-file-chart-line"></i> Settlement Summary</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

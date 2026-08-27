@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Log Out{% endblock %}
+{% block body_class %}auth-bare{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="bare-auth-wrap">
+  <div class="auth-card">
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-solid w-100">Yes, Log Me Out <i class="ri-logout-circle-line"></i></button>
+      <a href="/" class="btn btn-outline w-100 mt-12">Stay Signed In</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

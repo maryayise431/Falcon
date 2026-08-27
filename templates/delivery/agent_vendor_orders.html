@@ -1,0 +1,35 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Vendor Orders{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_agent.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">VENDOR ORDERS</h1></div>
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>CUSTOMER</th><th>PRODUCT</th><th>COD</th><th>FEE</th><th>NET</th><th>STATUS</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'vendor:order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.customer_name|truncatechars:18 }}</td>
+          <td>{{ order.product.name|truncatechars:20 }}</td>
+          <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
+          <td class="mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:0 }}{% else %}—{% endif %}</td>
+          <td class="mono {% if order.net_to_vendor %}text-lime{% endif %}">{% if order.net_to_vendor is not None %}&#8358;{{ order.net_to_vendor|floatformat:0 }}{% else %}—{% endif %}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No vendor orders assigned to you.</div>
+  {% endif %}
+</div>
+{% endblock %}

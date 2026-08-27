@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:44px;">
+  <div class="container grid-2-even">
+    <div>
+      {% with img=product.images.first %}
+      {% if img %}
+      <img src="{{ img.image.url }}" alt="{{ product.name }}" class="w-100" style="border-radius:var(--radius-lg);border:1px solid var(--border);" />
+      {% for extra in product.images.all|slice:"1:" %}
+      <img src="{{ extra.image.url }}" alt="{{ product.name }}" class="mt-8" style="width:90px;height:90px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border);" />
+      {% endfor %}
+      {% else %}
+      <div class="img-placeholder" style="height:380px;border-radius:var(--radius-lg);border:1px dashed var(--border);"><i class="ri-image-line"></i></div>
+      {% endif %}
+      {% endwith %}
+    </div>
+    <div>
+      <span class="pm-cat mono">{{ product.category.name|default:"GENERAL" }}</span>
+      <h1 class="display-md mt-8">{{ product.name }}</h1>
+      <p class="stat-value green mt-16">&#8358;{{ product.price|floatformat:2 }}</p>
+      <p class="page-sub mt-16">{{ product.description|linebreaksbr }}</p>
+
+      <div class="kv-grid mt-24">
+        <div class="kv-row"><span class="kv-key">Availability</span>
+          {% if product.stock > 0 %}<span class="kv-val green">{{ product.stock }} in stock</span>{% else %}<span class="status-badge st-failed">Sold Out</span>{% endif %}
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'marketplace:cart' %}" class="flex mt-24">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add" />
+        <input type="hidden" name="product_id" value="{{ product.id }}" />
+        <label class="mono text-grey" for="qty" style="font-size:0.65rem;">QTY</label>
+        <input type="number" id="qty" name="quantity" value="1" min="1" max="{{ product.stock }}" class="form-input" style="width:80px;" {% if product.stock == 0 %}disabled{% endif %} />
+        <button type="submit" class="btn btn-solid" {% if product.stock == 0 %}disabled{% endif %}>
+          Add to Cart <i class="ri-shopping-cart-2-line"></i>
+        </button>
+      </form>
+      {% if not user.is_authenticated %}
+      <p class="auth-footnote" style="text-align:left;">You'll need a customer account to check out. <a href="{% url 'accounts:register_customer' %}">Sign up free</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

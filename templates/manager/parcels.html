@@ -1,0 +1,45 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Parcels{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; PARCEL DESK /&gt;</p>
+    <h1 class="page-title">PARCELS</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Ref or receiver..." class="form-input" />
+    <select name="status" class="form-input" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if parcels %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>REQUESTER</th><th>RECEIVER</th><th>FEE</th><th>STATUS</th></tr></thead>
+      <tbody>
+        {% for parcel in parcels %}
+        <tr>
+          <td><a href="{% url 'parcel:manager_detail' parcel.parcel_reference %}" class="ref-code">{{ parcel.parcel_reference }}</a></td>
+          <td>{{ parcel.requested_by.email|truncatechars:22 }}</td>
+          <td>{{ parcel.receiver_name|truncatechars:16 }}<br /><span class="text-grey" style="font-size:0.74rem;">{{ parcel.receiver_address|truncatechars:24 }}</span></td>
+          <td class="mono">{% if parcel.delivery_fee %}&#8358;{{ parcel.delivery_fee|floatformat:0 }}{% else %}<span class="status-badge st-pending">Needs quote</span>{% endif %}</td>
+          <td><span class="status-badge st-{{ parcel.status }}">{{ parcel.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-send-plane-2-line"></i>No parcels found.</div>
+  {% endif %}
+</div>
+{% endblock %}

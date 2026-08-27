@@ -1,0 +1,50 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Full History{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_customer.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">FULL HISTORY</h1>
+    <p class="page-sub">Everything you've bought and every parcel you've sent.</p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'marketplace:home' %}" class="btn btn-outline">Shop</a>
+    <a href="{% url 'parcel:send' %}" class="btn btn-solid">New Parcel <i class="ri-add-line"></i></a>
+  </div>
+</div>
+
+<div class="grid-2-even">
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">MARKETPLACE ORDERS</span></div>
+    {% if orders %}
+    <ul style="list-style:none;">
+      {% for order in orders %}
+      <li style="display:flex;justify-content:space-between;gap:12px;padding:13px 20px;border-bottom:1px solid rgba(42,61,44,0.5);align-items:center;flex-wrap:wrap;">
+        <a href="{% url 'marketplace:order_confirmation' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a>
+        <span class="mono" style="font-size:0.72rem;color:var(--grey);">{{ order.created_at|date:"d M Y" }}</span>
+        <span class="mono">&#8358;{{ order.total_amount|floatformat:0 }}</span>
+        <span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="table-empty"><i class="ri-inbox-line"></i>No orders yet.</div>{% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">PARCEL SHIPMENTS</span></div>
+    {% if parcels %}
+    <ul style="list-style:none;">
+      {% for parcel in parcels %}
+      <li style="display:flex;justify-content:space-between;gap:12px;padding:13px 20px;border-bottom:1px solid rgba(42,61,44,0.5);align-items:center;flex-wrap:wrap;">
+        <a href="{% url 'parcel:detail' parcel.parcel_reference %}" class="ref-code">{{ parcel.parcel_reference }}</a>
+        <span class="mono" style="font-size:0.72rem;color:var(--grey);">{{ parcel.pickup_address|default:"Pickup"|truncatechars:14 }} <i class="ri-arrow-right-line"></i> {{ parcel.receiver_address|truncatechars:14 }}</span>
+        <span class="status-badge st-{{ parcel.status }}">{{ parcel.get_status_display }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="table-empty"><i class="ri-inbox-line"></i>No parcels yet.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,61 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}{{ granularity }} Report{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; {{ granularity|upper }} /&gt;</p>
+    <h1 class="page-title">{{ granularity|upper }} REPORT</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <select name="period" id="period-select" class="form-input">
+      {% for value, label in period_choices %}
+      <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <span class="mono text-grey" style="font-size:0.62rem;">{{ start|date:"d M Y" }} – {{ end|date:"d M Y" }}</span>
+    <a href="?{% if period %}period={{ period }}&amp;{% endif %}export=csv" class="btn btn-outline btn-sm"><i class="ri-download-2-line"></i> CSV</a>
+  </div>
+  {% if rows %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>BUCKET</th><th>MARKETPLACE</th><th>FULFILMENT FEES</th><th>PARCEL</th><th>PAYOUT CHARGES</th><th>TOTAL</th><th>ORDERS</th><th>DELIVERIES</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="ref-code">{{ row.label }}</td>
+          <td class="mono">&#8358;{{ row.marketplace|floatformat:0 }}</td>
+          <td class="mono">&#8358;{{ row.fulfilment_fees|floatformat:0 }}</td>
+          <td class="mono">&#8358;{{ row.parcel|floatformat:0 }}</td>
+          <td class="mono">&#8358;{{ row.withdrawal_charges|floatformat:0 }}</td>
+          <td class="mono text-lime">&#8358;{{ row.total|floatformat:0 }}</td>
+          <td class="mono">{{ row.orders }}</td>
+          <td class="mono">{{ row.deliveries }} / {{ row.parcels }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-bar-chart-line"></i>No data in this window.</div>
+  {% endif %}
+</div>
+
+<form method="get" id="custom-range" class="panel mt-24 {% if request.GET.period != 'custom' %}hidden{% endif %}">
+  <div class="panel-body filter-bar">
+    <label class="mono text-grey" style="font-size:0.62rem;">CUSTOM RANGE</label>
+    <input type="date" name="start" value="{{ request.GET.start }}" class="form-input" />
+    <input type="date" name="end" value="{{ request.GET.end }}" class="form-input" />
+    <button type="submit" formaction="{% url 'reports:report_custom' %}" class="btn btn-solid btn-sm">Run Custom Report</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

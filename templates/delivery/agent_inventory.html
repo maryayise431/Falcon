@@ -1,0 +1,37 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}My Inventory{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_agent.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; ASSIGNED STOCK /&gt;</p>
+    <h1 class="page-title">MY INVENTORY</h1>
+    <p class="page-sub">Products assigned to you for delivery. Accept orders and manage your route.</p>
+  </div>
+</div>
+
+<div class="panel">
+  {% if products %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>PRODUCT</th><th>VENDOR</th><th>PRICE</th><th>AVAILABLE</th><th>WAREHOUSE</th><th>STATUS</th></tr></thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td style="font-weight:600;color:var(--white);">{{ product.name }}</td>
+          <td>{{ product.vendor.vendorprofile.business_name|default:product.vendor.email }}</td>
+          <td class="mono">{{ product.price|floatformat:2 }}</td>
+          <td class="mono">{{ product.quantity_available }}</td>
+          <td>{% if product.warehouse %}{{ product.warehouse.address|default:product.warehouse.name }}{% else %}—{% endif %}</td>
+          <td><span class="status-badge st-{{ product.status }}">{{ product.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-archive-2-line"></i>No products assigned to you yet.<br /><span class="mono" style="font-size:0.66rem;">The manager will assign inventory for you to deliver.</span></div>
+  {% endif %}
+</div>
+{% endblock %}

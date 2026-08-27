@@ -1,0 +1,60 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Marketplace Storefront{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_customer.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; FALCON STORE /&gt;</p>
+    <h1 class="page-title">MARKETPLACE</h1>
+  </div>
+  <a href="{% url 'marketplace:cart' %}" class="btn btn-outline" style="position:relative;">Cart <i class="ri-shopping-cart-2-line"></i>{% if cart_count %}<span style="position:absolute;top:-6px;right:-6px;background:var(--green);color:#000;font-size:0.6rem;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;">{{ cart_count }}</span>{% endif %}</a>
+</div>
+
+<form method="get" class="filter-bar mb-24">
+  <input type="text" name="q" value="{{ search_query }}" placeholder="Search products..." class="form-input" style="flex:1;min-width:200px;" />
+  <select name="category" class="form-input" onchange="this.form.submit()">
+    <option value="">All categories</option>
+    {% for category in categories %}
+    <option value="{{ category.slug }}" {% if active_category == category.slug %}selected{% endif %}>{{ category.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-solid"><i class="ri-search-line"></i></button>
+</form>
+
+{% if products %}
+<div class="product-preview-grid">
+  {% for product in products %}
+  <div class="product-mini">
+    <a href="{% url 'marketplace:product_detail' product.slug %}" class="pm-img-link">
+      <div class="pm-img">
+        {% with img=product.images.first %}
+        {% if img %}<img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy" />
+        {% else %}<div class="img-placeholder"><i class="ri-image-line"></i></div>{% endif %}
+        {% endwith %}
+        {% if product.stock == 0 %}<span class="status-badge st-failed pm-oos">Sold Out</span>{% endif %}
+      </div>
+      <div class="pm-info">
+        <span class="pm-cat mono">{{ product.category.name|default:"GENERAL" }}</span>
+        <span class="pm-name">{{ product.name }}</span>
+        <span class="pm-price mono">&#8358;{{ product.price|floatformat:0 }}</span>
+      </div>
+    </a>
+    {% if product.stock > 0 %}
+    <form method="post" action="{% url 'marketplace:cart' %}" class="pm-cart-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add" />
+      <input type="hidden" name="product_id" value="{{ product.id }}" />
+      <input type="hidden" name="quantity" value="1" />
+      <input type="hidden" name="next" value="home" />
+      <button type="submit" class="btn btn-solid btn-sm pm-cart-btn"><i class="ri-shopping-cart-2-line"></i> Add to Cart</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+<div style="padding-top:8px;">{% include "partials/pagination.html" %}</div>
+{% else %}
+<div class="panel table-empty"><i class="ri-search-eye-line"></i>Nothing matches your search.</div>
+{% endif %}
+{% endblock %}

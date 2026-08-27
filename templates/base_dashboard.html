@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block body_class %}dash-body{% endblock %}
+
+{% block navbar %}{% endblock navbar %}
+{% block footer %}{% endblock footer %}
+
+{% block content %}
+{% with role_label=user.get_role_display %}
+<div class="dash-shell">
+
+  <div class="sidebar-backdrop" data-sidebar-close></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="/" class="brand">FALCON<span class="sub">{% if user.role == 'manager' or user.role == 'sub_manager' %}CONTROL{% elif user.role == 'vendor' %}VENDOR PORTAL{% elif user.role == 'delivery_agent' %}AGENT APP{% else %}CUSTOMER{% endif %}</span></a>
+    </div>
+
+    <nav class="sidebar-body">
+      {% block sidebar_nav %}{% endblock sidebar_nav %}
+      <form method="post" action="{% url 'accounts:logout' %}" data-confirm="Log out of Falcon?" class="sidebar-logout-row">
+        {% csrf_token %}
+        <button type="submit" class="side-link"><i class="ri-logout-box-r-line"></i> Log Out</button>
+      </form>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">{{ user.email|slice:":1"|upper }}</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">{{ user.email|truncatechars:22 }}</div>
+        <div class="sidebar-user-role">{{ role_label }}</div>
+      </div>
+      <form method="post" action="{% url 'accounts:logout' %}" data-confirm="Log out of Falcon?">
+        {% csrf_token %}
+        <button type="submit" class="sidebar-logout" aria-label="Log out"><i class="ri-logout-box-r-line"></i></button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="dash-main">
+    <header class="topbar">
+      <button class="topbar-icon sidebar-open-btn" data-sidebar-open aria-label="Open menu"><i class="ri-menu-2-line"></i></button>
+      <span class="topbar-title">{% block topbar_title %}{% endblock %}</span>
+      <span class="topbar-spacer"></span>
+      <button id="theme-toggle" class="theme-toggle" style="position:static;" aria-label="Toggle theme"><i class="ri-sun-line"></i></button>
+    </header>
+
+    <div class="dash-content">
+      {% block dash_content %}{% endblock %}
+    </div>
+  </div>
+
+</div>
+{% endwith %}
+{% endblock content %}

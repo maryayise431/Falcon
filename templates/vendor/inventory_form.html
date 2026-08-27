@@ -1,0 +1,21 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Register Stock{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">REGISTER STOCK</h1>
+    <p class="page-sub">Tell us what you're handing over. Falcon confirms receipt at the warehouse before orders can use it.</p>
+  </div>
+  <a href="{% url 'vendor:inventory' %}" class="btn btn-outline"><i class="ri-arrow-left-line"></i> Back to Inventory</a>
+</div>
+
+<div class="panel" style="max-width:680px;">
+  <form method="post" enctype="multipart/form-data" novalidate class="panel-body stack">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <button type="submit" class="btn btn-solid">Submit for Warehousing <i class="ri-archive-2-line"></i></button>
+  </form>
+</div>
+{% endblock %}

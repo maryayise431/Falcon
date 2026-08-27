@@ -1,0 +1,81 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Parcel {{ parcel.parcel_reference }}{% endblock %}
+{% block sidebar_nav %}{% if user.role == 'vendor' %}{% include "partials/sidebar_vendor.html" %}{% else %}{% include "partials/sidebar_customer.html" %}{% endif %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'parcel:history' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL PARCELS</a>
+    <h1 class="page-title mt-8">{{ parcel.parcel_reference }}</h1>
+  </div>
+  <span class="status-badge st-{{ parcel.status }}">{{ parcel.get_status_display }}</span>
+</div>
+
+{% if parcel.status == 'quoted' %}
+<div class="quote-banner mb-24">
+  <div>
+    <span class="mono text-grey" style="font-size:0.62rem;letter-spacing:0.14em;">YOUR QUOTE IS READY</span>
+    <div class="flex" style="gap:14px;margin-top:6px;">
+      <span class="quote-amount">&#8358;{{ parcel.delivery_fee|floatformat:2 }}</span>
+      {% if parcel.quote_note %}<span style="color:var(--grey);font-size:0.82rem;max-width:320px;">"{{ parcel.quote_note }}" — {{ parcel.quoted_by.email|truncatechars:16 }}</span>{% endif %}
+    </div>
+  </div>
+  <form method="post" action="{% url 'parcel:accept_quote' parcel.parcel_reference %}" data-confirm="Accept this quote and pay online now?">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-solid">Accept &amp; Pay Online <i class="ri-shield-flash-line"></i></button>
+  </form>
+</div>
+{% elif parcel.status == 'pending' %}
+<div class="notice-strip"><i class="ri-time-line"></i> Our team is reviewing your request — your quote will appear here shortly.</div>
+{% elif parcel.payment_status != 'paid' and parcel.status not in 'cancelled' %}
+<div class="notice-strip"><i class="ri-error-warning-line"></i> Payment pending — the parcel moves once payment clears.</div>
+{% endif %}
+
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">JOURNEY</span></div>
+    <div class="panel-body">
+      <ul class="timeline">
+        {% with steps='pending,quoted,processing,in_transit,delivered' %}
+        <li class="tl-step done"><span class="tl-dot"></span><span class="tl-label">Requested</span><div class="tl-time mono">{{ parcel.created_at|date:"d M Y H:i" }}</div></li>
+        <li class="tl-step {% if parcel.status == 'pending' %}current{% else %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">Quoted by Falcon</span></li>
+        <li class="tl-step {% if parcel.status == 'quoted' or parcel.payment_status != 'paid' %}done{% elif parcel.status in 'processing,in_transit,delivered' %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">Paid &amp; confirmed</span></li>
+        <li class="tl-step {% if parcel.status == 'in_transit' or parcel.status == 'delivered' %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">In transit</span>
+          {% if parcel.assigned_agent %}<div class="tl-time mono">AGENT: {{ parcel.assigned_agent.full_name }}</div>{% endif %}
+        </li>
+        <li class="tl-step {% if parcel.status == 'delivered' %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">{% if parcel.status == 'failed' %}Delivery failed{% else %}Delivered{% endif %}</span>
+          {% if parcel.delivered_at %}<div class="tl-time mono">{{ parcel.delivered_at|date:"d M Y H:i" }}</div>{% endif %}
+        </li>
+        {% endwith %}
+      </ul>
+      {% if parcel.status == 'cancelled' %}
+      <div class="notice-strip"><i class="ri-close-circle-line"></i> This shipment was cancelled.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="stack" style="gap:20px;">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">SHIPMENT DETAILS</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">Contents</span><span class="kv-val">{{ parcel.parcel_description|truncatechars:50 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Pick-up</span><span class="kv-val">{% if parcel.pickup_type == 'pickup' %}{{ parcel.pickup_address|truncatechars:44 }}{% else %}Drop at {{ parcel.dropoff_warehouse.name|default:"warehouse" }}{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Receiver</span><span class="kv-val">{{ parcel.receiver_name }} &bull; <span class="mono">{{ parcel.receiver_phone }}</span></span></div>
+        <div class="kv-row"><span class="kv-key">Destination</span><span class="kv-val">{{ parcel.receiver_address|truncatechars:60 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Fee</span><span class="kv-val mono">{% if parcel.delivery_fee %}&#8358;{{ parcel.delivery_fee|floatformat:2 }}{% else %}Awaiting quote{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Payment</span>
+          <span class="status-badge st-{% if parcel.payment_status == 'paid' %}paid{% else %}pending{% endif %}">{{ parcel.get_payment_status_display }}</span>
+        </div>
+        <a href="{% url 'tracking:detail' parcel.parcel_reference %}" class="btn btn-outline mt-8">Public Tracking <i class="ri-external-link-line"></i></a>
+      </div>
+    </div>
+
+    {% if parcel.status in 'pending,quoted' %}
+    <form method="post" action="{% url 'parcel:cancel' parcel.parcel_reference %}" data-confirm="Cancel this parcel request?" data-confirm-title="Cancel parcel">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger w-100">Cancel Request</button>
+    </form>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

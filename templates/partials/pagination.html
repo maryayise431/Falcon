@@ -1,0 +1,11 @@
+{% if page_obj.has_other_pages %}
+<nav class="pagination mono">
+  {% if page_obj.has_previous %}
+    <a href="?{% if search_query %}q={{ search_query }}&amp;{% endif %}{% if status_filter %}status={{ status_filter }}&amp;{% endif %}page={{ page_obj.previous_page_number }}" class="pg-link">&laquo; Prev</a>
+  {% endif %}
+  <span class="pg-info">PAGE {{ page_obj.number }} / {{ paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?{% if search_query %}q={{ search_query }}&amp;{% endif %}{% if status_filter %}status={{ status_filter }}&amp;{% endif %}page={{ page_obj.next_page_number }}" class="pg-link">Next &raquo;</a>
+  {% endif %}
+</nav>
+{% endif %}

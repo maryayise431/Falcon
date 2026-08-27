@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Falcon Delivery{% endblock %} | Falcon</title>
+  <meta name="description" content="{% block meta_description %}Falcon Delivery Service — marketplace, vendor fulfilment and parcel delivery across Nigeria.{% endblock %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/falcon.css' %}" />
+  <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}" />
+  <script>
+    /* Apply stored theme before paint to avoid flash */
+    (function () {
+      try {
+        var t = localStorage.getItem("falcon-theme");
+        if (t === "light" || t === "dark") {
+          var cls = t === "light" ? "add" : "remove";
+          document.addEventListener("DOMContentLoaded", function () { document.body.classList[cls]("light-mode"); });
+        }
+      } catch (e) {}
+    })();
+  </script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}"{% if GOOGLE_MAPS_API_KEY %} data-gmaps-key="{{ GOOGLE_MAPS_API_KEY }}"{% endif %}>
+  {% block navbar %}
+  <nav class="navbar">
+    <a href="/" class="logo">FALCON</a>
+    <div class="nav-links">
+      <a href="/#services">Services</a>
+      <a href="/marketplace/" class="{% if request.path|slice:':12' == '/marketplace/' %}active{% endif %}">Marketplace</a>
+      <a href="/vendor/dashboard/">For Vendors</a>
+      <a href="/track/">Track Item</a>
+    </div>
+    <div class="nav-actions">
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme"><i class="ri-sun-line"></i></button>
+      {% if user.is_authenticated %}
+        <a href="{{ role_home }}" class="nav-btn nav-btn-primary">Dashboard</a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="nav-btn">Sign In</a>
+        <a href="{% url 'accounts:register_vendor' %}" class="nav-btn nav-btn-primary">Get Started</a>
+      {% endif %}
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Open menu"><i class="ri-menu-line"></i></button>
+  </nav>
+
+  <div class="mobile-menu-overlay"></div>
+  <aside class="mobile-menu">
+    <div class="mobile-menu-header">
+      <span class="brand">FALCON</span>
+      <button class="close-menu" aria-label="Close menu">&times;</button>
+    </div>
+    <nav class="mobile-nav-links">
+      <a href="/#services">Services</a>
+      <a href="/marketplace/">Marketplace</a>
+      <a href="/vendor/dashboard/">For Vendors</a>
+      <a href="/track/">Track Item</a>
+      <a href="/parcel/send/">Send a Parcel</a>
+      {% if user.is_authenticated %}
+      <a href="{{ role_home }}">My Dashboard</a>
+      {% else %}
+      <a href="{% url 'accounts:login' %}">Sign In</a>
+      <a href="{% url 'accounts:register_vendor' %}">Create Account</a>
+      {% endif %}
+    </nav>
+    <div class="mobile-menu-footer mono">FAST &bull; SECURE &bull; RELIABLE</div>
+  </aside>
+  {% endblock navbar %}
+
+  {% include "partials/messages.html" %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand-col">
+        <span class="brand">FALCON</span>
+        <p>Three businesses. One network. Falcon moves goods from shelf to doorstep across Nigeria.</p>
+        <div class="socials">
+          <a href="#" aria-label="Twitter / X"><i class="ri-twitter-x-line"></i></a>
+          <a href="#" aria-label="Instagram"><i class="ri-instagram-line"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="ri-linkedin-box-line"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>BUSINESSES</h4>
+        <ul>
+          <li><a href="/marketplace/">Falcon Marketplace</a></li>
+          <li><a href="/vendor/dashboard/">Vendor Fulfilment</a></li>
+          <li><a href="/parcel/send/">Parcel Delivery</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>SUPPORT</h4>
+        <ul>
+          <li><a href="/track/">Track an Order</a></li>
+          <li><a href="{% url 'accounts:login' %}">Account Login</a></li>
+          <li><a href="{% url 'core:terms' %}">Terms of Service</a></li>
+          <li><a href="{% url 'core:privacy' %}">Privacy Policy</a></li>
+          <li><a href="mailto:support@falcon.ng">support@falcon.ng</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom mono">
+      &copy; {% now "Y" %} FALCON DELIVERY SERVICE &bull; ALL RIGHTS RESERVED
+    </div>
+  </footer>
+  {% endblock footer %}
+
+  <script src="{% static 'js/site.js' %}"></script>
+  <script src="{% static 'js/confirm-modal.js' %}"></script>
+  <script src="{% static 'js/validation.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
+

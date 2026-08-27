@@ -1,0 +1,40 @@
+﻿{% extends "base_dashboard.html" %}
+{% block topbar_title %}My Parcels{% endblock %}
+{% block sidebar_nav %}{% if user.role == 'vendor' %}{% include "partials/sidebar_vendor.html" %}{% else %}{% include "partials/sidebar_customer.html" %}{% endif %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; SHIPMENTS /&gt;</p>
+    <h1 class="page-title">MY PARCELS</h1>
+  </div>
+  <a href="{% url 'parcel:send' %}" class="btn btn-solid">New Parcel <i class="ri-add-line"></i></a>
+</div>
+
+<div class="panel">
+  {% if parcels %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>RECEIVER</th><th>ROUTE</th><th>FEE</th><th>STATUS</th><th></th></tr></thead>
+      <tbody>
+        {% for parcel in parcels %}
+        <tr>
+          <td><a href="{% url 'parcel:detail' parcel.parcel_reference %}" class="ref-code">{{ parcel.parcel_reference }}</a></td>
+          <td>{{ parcel.receiver_name|truncatechars:16 }}</td>
+          <td style="font-size:0.78rem;color:var(--grey);">{% if parcel.pickup_type == 'pickup' %}{{ parcel.pickup_address|truncatechars:14 }}{% else %}{{ parcel.dropoff_warehouse.name|default:"Warehouse" }}{% endif %} <i class="ri-arrow-right-line"></i> {{ parcel.receiver_address|truncatechars:14 }}</td>
+          <td class="mono">{% if parcel.delivery_fee %}&#8358;{{ parcel.delivery_fee|floatformat:0 }}{% else %}<span class="text-grey">Awaiting quote</span>{% endif %}</td>
+          <td><span class="status-badge st-{{ parcel.status }}">{{ parcel.get_status_display }}</span></td>
+          <td><a href="{% url 'parcel:detail' parcel.parcel_reference %}" class="mono text-green" style="font-size:0.68rem;">OPEN <i class="ri-arrow-right-line"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-send-plane-2-line"></i>No parcels yet. Send your first one!</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+

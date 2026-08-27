@@ -1,0 +1,7 @@
+﻿<a href="{% url 'marketplace:home' %}" class="side-link {% if request.resolver_match.view_name == 'marketplace:home' %}active{% endif %}"><i class="ri-store-2-line"></i> Marketplace</a>
+<a href="{% url 'customer:dashboard' %}" class="side-link {% if request.resolver_match.app_name == 'customer' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="ri-dashboard-line"></i> Dashboard</a>
+<a href="{% url 'customer:orders' %}" class="side-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}"><i class="ri-shopping-bag-3-line"></i> My Orders</a>
+<a href="{% url 'customer:history' %}" class="side-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"><i class="ri-history-line"></i> Full History</a>
+<a href="{% url 'parcel:send' %}" class="side-link {% if request.resolver_match.url_name == 'send' %}active{% endif %}"><i class="ri-send-plane-2-line"></i> Send a Parcel</a>
+<a href="{% url 'parcel:history' %}" class="side-link {% if request.resolver_match.app_name == 'parcel' and request.resolver_match.url_name != 'send' %}active{% endif %}"><i class="ri-archive-stack-line"></i> My Parcels</a>
+<a href="{% url 'tracking:search' %}" class="side-link"><i class="ri-radar-line"></i> Track Shipment</a>

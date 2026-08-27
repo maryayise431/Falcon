@@ -1,0 +1,68 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Withdrawal Approvals{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; PAYOUT QUEUE /&gt;</p>
+    <h1 class="page-title">WITHDRAWALS</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <select name="status" class="form-input" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if withdrawals %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>DATE</th><th>VENDOR</th><th>AMOUNT</th><th>CHARGE</th><th>PAYOUT</th><th>BANK</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+      <tbody>
+        {% for w in withdrawals %}
+        <tr>
+          <td class="mono text-grey" style="font-size:0.68rem;">{{ w.requested_at|date:"d M H:i" }}</td>
+          <td><a href="{% url 'vendor:manager_vendor_wallet' w.vendor_id %}" style="color:var(--white);">{{ w.vendor.vendorprofile.business_name|default:w.vendor.email|truncatechars:18 }}</a></td>
+          <td class="mono">&#8358;{{ w.amount_requested|floatformat:0 }}</td>
+          <td class="mono text-grey">-&#8358;{{ w.withdrawal_charge|floatformat:0 }}</td>
+          <td class="mono text-lime">&#8358;{{ w.amount_transferred|floatformat:2 }}</td>
+          <td style="font-size:0.78rem;">{{ w.vendor.vendorprofile.bank_name|default:"—" }}<br /><span class="mono text-grey" style="font-size:0.62rem;">{{ w.vendor.vendorprofile.bank_account_number|default:"" }}</span></td>
+          <td><span class="status-badge st-{{ w.status }}">{{ w.get_status_display }}</span></td>
+          <td>
+            {% if w.status == 'pending' and user.role == 'manager' %}
+            <div class="flex" style="gap:6px;">
+              <form method="post" action="{% url 'vendor:manager_withdrawal_approve' w.id %}" data-confirm="Approve payout of ₦{{ w.amount_transferred|floatformat:2 }} to {{ w.vendor.vendorprofile.bank_account_number|default:'bank' }}?">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-solid btn-sm"><i class="ri-check-line"></i> Pay</button>
+              </form>
+              <form method="post" action="{% url 'vendor:manager_withdrawal_reject' w.id %}" data-confirm="Reject this withdrawal? Funds return to the wallet." data-confirm-title="Reject withdrawal">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline btn-sm text-red"><i class="ri-close-line"></i></button>
+              </form>
+            </div>
+            {% elif w.status == 'pending' %}
+            <span class="mono text-grey" style="font-size:0.6rem;">MANAGER ONLY</span>
+            {% else %}
+            <span class="mono text-grey" style="font-size:0.66rem;">{% if w.processed_by %}by {{ w.processed_by.email|truncatechars:12 }}{% else %}—{% endif %}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-bank-card-line"></i>No withdrawal requests.</div>
+  {% endif %}
+</div>
+
+{% if not PAYSTACK_ENABLED %}
+<div class="notice-strip mt-24"><i class="ri-flask-line"></i> Dev mode: approvals simulate the Paystack transfer (no secret key configured).</div>
+{% endif %}
+{% endblock %}
+

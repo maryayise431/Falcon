@@ -1,0 +1,11 @@
+{% if messages %}
+<div class="toast-stack">
+  {% for message in messages %}
+  <div class="toast toast-{{ message.tags|default:'info' }}">
+    <i class="ri-{% if message.tags == 'success' %}checkbox-circle{% elif message.tags == 'error' %}close-circle{% elif message.tags == 'warning' %}alert{% else %}information{% endif %}-fill"></i>
+    <span>{{ message }}</span>
+    <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

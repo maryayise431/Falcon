@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Staff Portal{% endblock %}
+{% block body_class %}auth-bare{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="bare-auth-wrap">
+  <div class="auth-card">
+    <img src="{% static 'images/logo.png' %}" alt="Falcon" class="auth-logo" />
+    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<p class="field-error mono">{{ error }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-solid w-100 mt-16">Enter Portal <i class="ri-shield-keyhole-line"></i></button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base_dashboard.html" %}
+{% load static %}{% block topbar_title %}Job {{ assignment.reference }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_agent.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'agent:deliveries' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL DELIVERIES</a>
+    <h1 class="page-title mt-8">{{ assignment.reference }}</h1>
+    <p class="page-sub">{% if assignment.order %}Vendor fulfilment order — collect &#8358;{{ assignment.order.cod_amount|floatformat:0 }} on delivery.{% elif assignment.marketplace_order %}Marketplace delivery — no cash collection needed.{% else %}Prepaid parcel delivery job — no cash collection needed.{% endif %}</p>
+  </div>
+  <span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span>
+</div>
+
+<div class="grid-2">
+  <div class="stack" style="gap:20px;">
+    {% if assignment.status == 'assigned' or assignment.status == 'approved' %}
+    <div class="panel">
+      <form method="post" action="{% url 'agent:pickup' assignment.reference %}" data-confirm="Mark as out for delivery?" class="panel-body stack">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-solid w-100"><i class="ri-truck-line"></i> Out for Delivery</button>
+      </form>
+    </div>
+    {% elif assignment.status == 'out_for_delivery' %}
+
+      {% if assignment.order %}
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">CONFIRM DELIVERY &amp; COD</span></div>
+        <form method="post" action="{% url 'agent:mark_delivered' assignment.reference %}" data-confirm="Mark delivered? COD will be settled into the vendor's wallet." class="panel-body stack">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=deliver_form %}
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-checkbox-circle-line"></i> Delivered — COD Collected</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <form method="post" action="{% url 'agent:mark_failed' assignment.reference %}" data-confirm="Report a failed delivery attempt?" class="panel-body stack">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=fail_form %}
+          <button type="submit" class="btn btn-outline w-100 text-red"><i class="ri-close-circle-line"></i> Report Failed Attempt</button>
+        </form>
+      </div>
+
+      {% elif assignment.marketplace_order %}
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">CONFIRM DELIVERY</span></div>
+        <form method="post" action="{% url 'agent:mark_delivered' assignment.reference %}" data-confirm="Mark marketplace order as delivered?" class="panel-body stack">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=parcel_deliver_form %}
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-checkbox-circle-line"></i> Mark Delivered</button>
+        </form>
+      </div>
+      <div class="panel">
+        <form method="post" action="{% url 'agent:mark_failed' assignment.reference %}" data-confirm="Report a failed delivery attempt?" class="panel-body stack">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=fail_form %}
+          <button type="submit" class="btn btn-outline w-100 text-red"><i class="ri-close-circle-line"></i> Report Failed Attempt</button>
+        </form>
+      </div>
+
+      {% else %}
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">CONFIRM DELIVERY</span></div>
+        <form method="post" action="{% url 'agent:mark_delivered' assignment.reference %}" data-confirm="Mark parcel as delivered?" class="panel-body stack">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=parcel_deliver_form %}
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-checkbox-circle-line"></i> Mark Delivered</button>
+        </form>
+      </div>
+      <div class="panel">
+        <form method="post" action="{% url 'agent:mark_failed' assignment.reference %}" data-confirm="Report a failed delivery attempt?" class="panel-body stack">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=fail_form %}
+          <button type="submit" class="btn btn-outline w-100 text-red"><i class="ri-close-circle-line"></i> Report Failed Attempt</button>
+        </form>
+      </div>
+      {% endif %}
+
+    {% elif assignment.status == 'delivered' %}
+    <div class="notice-strip" style="border-color:rgba(46,204,113,0.4);background:rgba(46,204,113,0.08);color:#2ecc71;"><i class="ri-checkbox-circle-line"></i> Delivered {{ assignment.delivered_at|date:"d M Y H:i" }}{% if assignment.order and assignment.cod_collected %} — COD &#8358;{{ assignment.cod_collected|floatformat:2 }} collected{% endif %}.</div>
+    {% elif assignment.status == 'failed' %}
+    <div class="notice-strip" style="border-color:rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:#e74c3c;"><i class="ri-close-circle-line"></i> Reported failed. Manager can override if resolved.</div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">DELIVERY DETAILS</span></div>
+      <div class="panel-body stack">
+        {% if assignment.order %}
+        <div class="kv-row"><span class="kv-key">Customer</span><span class="kv-val">{{ assignment.order.customer_name }}</span></div>
+        <div class="kv-row"><span class="kv-key">Phone</span><a class="kv-val mono" href="tel:{{ assignment.order.customer_phone }}">{{ assignment.order.customer_phone }}</a></div>
+        <div class="kv-row"><span class="kv-key">Address</span><span class="kv-val">{{ assignment.order.customer_address|linebreaksbr|striptags }}</span></div>
+        <div class="kv-row"><span class="kv-key">Item</span><span class="kv-val">{{ assignment.order.product_name }} &times; {{ assignment.order.quantity }}</span></div>
+        <div class="kv-row"><span class="kv-key">Collect COD</span><span class="kv-val green mono">&#8358;{{ assignment.order.cod_amount|floatformat:2 }}</span></div>
+        {% if assignment.order.delivery_instructions %}
+        <div class="kv-row"><span class="kv-key">Instructions</span><span class="kv-val">{{ assignment.order.delivery_instructions }}</span></div>
+        {% endif %}
+
+        {% elif assignment.marketplace_order %}
+        <div class="kv-row"><span class="kv-key">Customer</span><span class="kv-val">{{ assignment.marketplace_order.customer.email }}</span></div>
+        {% if assignment.marketplace_order.receiver_phone %}
+        <div class="kv-row"><span class="kv-key">Phone</span><a class="kv-val mono" href="tel:{{ assignment.marketplace_order.receiver_phone }}">{{ assignment.marketplace_order.receiver_phone }}</a></div>
+        {% endif %}
+        {% if assignment.marketplace_order.delivery_address %}
+        <div class="kv-row"><span class="kv-key">Address</span><span class="kv-val">{{ assignment.marketplace_order.delivery_address|linebreaksbr|striptags }}</span></div>
+        {% endif %}
+        <div class="kv-row"><span class="kv-key">Items</span><span class="kv-val">{% for item in assignment.marketplace_order.items.all %}{{ item.product_name }} &times; {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}</span></div>
+        <div class="kv-row"><span class="kv-key">Total</span><span class="kv-val green mono">&#8358;{{ assignment.marketplace_order.total_amount|floatformat:2 }}</span></div>
+
+        {% else %}
+        <div class="kv-row"><span class="kv-key">Receiver</span><span class="kv-val">{{ assignment.parcel.receiver_name }}</span></div>
+        <div class="kv-row"><span class="kv-key">Phone</span><a class="kv-val mono" href="tel:{{ assignment.parcel.receiver_phone }}">{{ assignment.parcel.receiver_phone }}</a></div>
+        <div class="kv-row"><span class="kv-key">Drop-off</span><span class="kv-val">{{ assignment.parcel.receiver_address|linebreaksbr|striptags }}</span></div>
+        <div class="kv-row"><span class="kv-key">Pick-up</span><span class="kv-val">{{ assignment.parcel.pickup_address|truncatechars:60|linebreaksbr|striptags }}</span></div>
+        <div class="kv-row"><span class="kv-key">Contents</span><span class="kv-val">{{ assignment.parcel.parcel_description|truncatechars:50 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Payment</span><span class="status-badge st-{% if assignment.parcel.payment_status == 'paid' %}paid{% else %}pending{% endif %}">{% if assignment.parcel.payment_status == 'paid' %}Prepaid Online{% else %}{{ assignment.parcel.get_payment_status_display }}{% endif %}</span></div>
+        {% endif %}
+        <a href="{% url 'tracking:detail' assignment.reference %}" class="btn btn-outline mt-8">Public Tracking Page <i class="ri-external-link-line"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="panel-head"><span class="panel-title">ROUTE</span></div>
+    <div class="panel-body stack">
+      <div id="map-embed"
+           data-lat="{% if assignment.order %}{{ assignment.order.customer_address_lat }}{% elif assignment.marketplace_order %}{{ assignment.marketplace_order.delivery_address_lat }}{% else %}{{ assignment.parcel.receiver_address_lat }}{% endif %}"
+           data-lng="{% if assignment.order %}{{ assignment.order.customer_address_lng }}{% elif assignment.marketplace_order %}{{ assignment.marketplace_order.delivery_address_lng }}{% else %}{{ assignment.parcel.receiver_address_lng }}{% endif %}"
+           style="width:100%;height:260px;border-radius:var(--radius);border:1px solid var(--border);background:var(--deep);"></div>
+      {% if not GOOGLE_MAPS_API_KEY %}
+      <p class="mono text-grey" style="font-size:0.6rem;margin:6px 0 0;">Set GOOGLE_MAPS_API_KEY in .env for turn-by-turn navigation.</p>
+      {% endif %}
+      <div class="kv-row"><span class="kv-key">Assigned</span><span class="kv-val mono">{{ assignment.assigned_at|date:"d M H:i" }}</span></div>
+      {% if assignment.delivery_notes %}
+      <div class="kv-row"><span class="kv-key">Notes</span><span class="kv-val">{{ assignment.delivery_notes|truncatechars:60 }}</span></div>
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/maps.js' %}"></script>{% endblock %}

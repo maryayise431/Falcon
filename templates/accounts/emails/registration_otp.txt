@@ -1,0 +1,12 @@
+Hi {% if user.customerprofile %}{{ user.customerprofile.full_name }}{% elif user.vendorprofile %}{{ user.vendorprofile.business_name }}{% else %}there{% endif %},
+
+Welcome to {{ site_name }}!
+
+Your email verification code is:
+
+    {{ otp }}
+
+This code expires in {{ expiry_minutes }} minutes. If you didn't create a
+Falcon account, you can safely ignore this email.
+
+— The Falcon Team

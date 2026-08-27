@@ -1,0 +1,113 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Parcel {{ parcel.parcel_reference }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'parcel:manager_list' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL PARCELS</a>
+    <h1 class="page-title mt-8">{{ parcel.parcel_reference }}</h1>
+  </div>
+  <span class="status-badge st-{{ parcel.status }}">{{ parcel.get_status_display }}</span>
+</div>
+
+<div class="grid-2">
+  <div class="stack" style="gap:20px;">
+
+    {% if can_act and parcel.status == 'pending' %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">SET QUOTE</span></div>
+      <form method="post" action="{% url 'parcel:manager_quote' parcel.parcel_reference %}" data-confirm="Send this quote to the customer?" class="panel-body stack">
+        {% csrf_token %}
+        {% include "partials/form_fields.html" with form=quote_form %}
+        <button type="submit" class="btn btn-solid w-100"><i class="ri-price-tag-3-line"></i> Send Quote to Customer</button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if can_act and parcel.status == 'processing' and not parcel.assigned_agent %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">ASSIGN AGENT</span></div>
+      <form method="post" action="{% url 'parcel:manager_assign' parcel.parcel_reference %}" data-confirm="Assign this delivery agent to the parcel?" class="panel-body stack">
+        {% csrf_token %}
+        <select name="agent_id" class="form-input" required>
+          <option value="">Select agent…</option>
+          {% for agent in agents %}
+          <option value="{{ agent.id }}">{{ agent.full_name|default:agent.user.email }} — {{ agent.address|default:agent.assigned_zone|default:"any" }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-solid w-100"><i class="ri-user-shared-line"></i> Assign &amp; Dispatch</button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if can_act and parcel.status in 'in_transit,out_for_delivery,processing,quoted' %}
+    <div class="panel">
+      <form method="post" action="{% url 'parcel:manager_delivered' parcel.parcel_reference %}" data-confirm="Mark this parcel as delivered? This cannot be undone." class="panel-body stack">
+        {% csrf_token %}
+        <label style="font-family:var(--font-mono);font-size:0.62rem;color:var(--grey);letter-spacing:0.12em;">DELIVERY NOTES</label>
+        <textarea name="delivery_notes" class="form-input" rows="2" placeholder="Optional delivery notes…"></textarea>
+        <div class="flex" style="flex-wrap:wrap;">
+          <button type="submit" class="btn btn-solid w-100"><i class="ri-checkbox-circle-line"></i> Mark Delivered</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if parcel.status == 'delivered' %}
+    <div class="notice-strip" style="border-color:rgba(46,204,113,0.4);background:rgba(46,204,113,0.08);color:#2ecc71;"><i class="ri-checkbox-circle-line"></i> Delivered {{ parcel.delivered_at|date:"d M Y H:i" }} — no further changes allowed.</div>
+    {% endif %}
+
+    {% if not can_act %}
+    <div class="notice-strip"><i class="ri-eye-line"></i> Read-only view — only Managers can quote or assign.</div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">SHIPMENT DETAILS</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">Requester</span><span class="kv-val">{{ parcel.requested_by.email|truncatechars:24 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Sender</span><span class="kv-val">{{ parcel.sender_name }} &bull; <span class="mono">{{ parcel.sender_phone }}</span></span></div>
+        <div class="kv-row"><span class="kv-key">Contents</span><span class="kv-val">{{ parcel.parcel_description|truncatechars:60 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Pick-up</span><span class="kv-val">{% if parcel.pickup_type == 'pickup' %}{{ parcel.pickup_address|truncatechars:44 }}{% else %}Drop at {{ parcel.dropoff_warehouse.name|default:"warehouse" }}{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Receiver</span><span class="kv-val">{{ parcel.receiver_name }} &bull; <span class="mono">{{ parcel.receiver_phone }}</span></span></div>
+        <div class="kv-row"><span class="kv-key">Destination</span><span class="kv-val">{{ parcel.receiver_address|truncatechars:70 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Payment</span><span class="status-badge st-{% if parcel.payment_status == 'paid' %}paid{% else %}pending{% endif %}">{{ parcel.get_payment_status_display }}{% if parcel.payment_simulated %} (sim){% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Created</span><span class="kv-val mono">{{ parcel.created_at|date:"d M Y H:i" }}</span></div>
+        <a href="{% url 'tracking:detail' parcel.parcel_reference %}" class="btn btn-outline mt-8">Public Tracking <i class="ri-external-link-line"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <aside class="stack" style="gap:20px;">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">QUOTE STATUS</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">Fee</span><span class="kv-val green mono">{% if parcel.delivery_fee %}&#8358;{{ parcel.delivery_fee|floatformat:2 }}{% else %}Not set{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Quoted By</span><span class="kv-val">{{ parcel.quoted_by.email|default:"—"|truncatechars:18 }}</span></div>
+        {% if parcel.quote_note %}<div class="kv-row"><span class="kv-key">Note</span><span class="kv-val">{{ parcel.quote_note }}</span></div>{% endif %}
+        {% if parcel.paid_at %}<div class="kv-row"><span class="kv-key">Paid At</span><span class="kv-val mono">{{ parcel.paid_at|date:"d M H:i" }}</span></div>{% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">ASSIGNMENT</span></div>
+      <div class="panel-body stack">
+        {% if assignment %}
+        <div class="kv-row"><span class="kv-key">Agent</span><span class="kv-val">{{ assignment.agent.full_name|default:assignment.agent.user.email }}</span></div>
+        <div class="kv-row"><span class="kv-key">Status</span><span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span></div>
+        {% if assignment.delivered_at %}
+        <div class="kv-row"><span class="kv-key">Delivered</span><span class="kv-val mono">{{ assignment.delivered_at|date:"d M H:i" }}</span></div>
+        {% endif %}
+        {% if assignment.delivery_notes %}
+        <div class="kv-row"><span class="kv-key">Notes</span><span class="kv-val">{{ assignment.delivery_notes|truncatechars:80 }}</span></div>
+        {% endif %}
+        {% elif parcel.assigned_agent %}
+        <div class="kv-row"><span class="kv-key">Agent</span><span class="kv-val">{{ parcel.assigned_agent.full_name }}</span></div>
+        {% else %}
+        <p style="color:var(--grey);font-size:0.84rem;margin:0;">No agent assigned yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

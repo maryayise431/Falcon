@@ -1,0 +1,54 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}My Deliveries{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_agent.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">MY DELIVERIES</h1></div>
+  <form method="get" class="filter-bar">
+    <select name="status" class="form-input" onchange="this.form.submit()">
+      <option value="">All</option>
+      <option value="active" {% if state_filter == 'active' %}selected{% endif %}>Active</option>
+      <option value="delivered" {% if state_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+      <option value="failed" {% if state_filter == 'failed' %}selected{% endif %}>Failed</option>
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if assignments %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>TYPE</th><th>DESTINATION</th><th>STATUS</th><th></th></tr></thead>
+      <tbody>
+        {% for assignment in assignments %}
+        <tr>
+          <td><a href="{% url 'agent:agent_detail' assignment.reference %}" class="ref-code">{{ assignment.reference }}</a></td>
+          <td>
+            {% if assignment.order %}<span class="status-badge st-processing">Vendor</span>
+            {% elif assignment.marketplace_order %}<span class="status-badge st-delivered">Marketplace</span>
+            {% else %}<span class="status-badge st-pending">Parcel</span>{% endif %}
+          </td>
+          <td style="font-size:0.8rem;">
+            {% if assignment.order %}
+              {{ assignment.order.customer_name|truncatechars:18 }}<br/><span class="text-grey">{{ assignment.order.customer_address|truncatechars:30 }}</span>
+            {% elif assignment.marketplace_order %}
+              {{ assignment.marketplace_order.customer.email|truncatechars:18 }}<br/>
+              <span class="text-grey">{% if assignment.marketplace_order.delivery_address %}{{ assignment.marketplace_order.delivery_address|truncatechars:30 }}{% else %}Warehouse pickup{% endif %}</span>
+            {% else %}
+              {{ assignment.parcel.receiver_name|truncatechars:18 }}<br/><span class="text-grey">{{ assignment.parcel.receiver_address|truncatechars:30 }}</span>
+            {% endif %}
+          </td>
+          <td><span class="status-badge st-{{ assignment.status }}">{{ assignment.get_status_display }}</span></td>
+          <td><a href="{% url 'agent:agent_detail' assignment.reference %}" class="mono text-green" style="font-size:0.68rem;">OPEN <i class="ri-arrow-right-line"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-route-line"></i>No deliveries here yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

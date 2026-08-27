@@ -1,0 +1,60 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}All Products{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; CATALOG /&gt;</p>
+    <h1 class="page-title">MARKETPLACE PRODUCTS</h1>
+  </div>
+  <div class="page-actions">
+    <form method="get" class="filter-bar">
+      <input type="text" name="q" value="{{ search_query }}" placeholder="Search..." class="form-input" />
+      <select name="state" class="form-input" onchange="this.form.submit()">
+        <option value="">All</option>
+        <option value="published" {% if state_filter == 'published' %}selected{% endif %}>Published</option>
+        <option value="draft" {% if state_filter == 'draft' %}selected{% endif %}>Drafts</option>
+      </select>
+    </form>
+    <a href="{% url 'marketplace:manager_product_create' %}" class="btn btn-solid btn-sm">+ New Product</a>
+  </div>
+</div>
+
+<div class="panel">
+  {% if products %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>PRODUCT</th><th>CATEGORY</th><th>PRICE</th><th>STOCK</th><th>STATE</th><th>ACTIONS</th></tr></thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td style="font-weight:600;color:var(--white);">{{ product.name }}</td>
+          <td>{{ product.category.name|default:"—" }}</td>
+          <td class="mono">&#8358;{{ product.price|floatformat:0 }}</td>
+          <td class="mono{% if product.stock == 0 %} text-red{% endif %}">{{ product.stock }}</td>
+          <td><span class="status-badge {% if product.is_published %}st-delivered{% else %}st-cancelled{% endif %}">{% if product.is_published %}Live{% else %}Draft{% endif %}</span></td>
+          <td>
+            <div class="flex" style="gap:6px;">
+              <a href="{% url 'marketplace:manager_product_edit' product.id %}" class="topbar-icon" title="Edit"><i class="ri-edit-line"></i></a>
+              <form method="post" action="{% url 'marketplace:manager_product_publish' product.id %}" data-confirm="{% if product.is_published %}Unpublish{% else %}Publish{% endif %} '{{ product.name }}'?">
+                {% csrf_token %}
+                <button type="submit" class="topbar-icon" title="{% if product.is_published %}Unpublish{% else %}Publish{% endif %}"><i class="ri-{% if product.is_published %}eye-off{% else %}eye{% endif %}-line"></i></button>
+              </form>
+              <form method="post" action="{% url 'marketplace:manager_product_delete' product.id %}" data-confirm="Delete '{{ product.name }}' permanently?">
+                {% csrf_token %}
+                <button type="submit" class="topbar-icon" title="Delete"><i class="ri-delete-bin-6-line text-red"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-archive-2-line"></i>No products yet. Create your first one.</div>
+  {% endif %}
+</div>
+{% endblock %}

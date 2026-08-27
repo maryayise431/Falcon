@@ -1,0 +1,15 @@
+﻿<a href="{% url 'submanager:dashboard' %}" class="side-link {% if request.resolver_match.url_name == 'submanager_dashboard' %}active{% endif %}"><i class="ri-dashboard-line"></i> My Dashboard</a>
+<a href="{% url 'marketplace:manager_products' %}" class="side-link {% if request.resolver_match.url_name == 'manager_products' %}active{% endif %}"><i class="ri-archive-drawer-line"></i> Products</a>
+<a href="{% url 'marketplace:manager_orders' %}" class="side-link {% if request.resolver_match.url_name == 'manager_orders' %}active{% endif %}"><i class="ri-shopping-bag-3-line"></i> Orders</a>
+<a href="{% url 'vendor:manager_vendors' %}" class="side-link {% if request.resolver_match.url_name == 'manager_vendors' %}active{% endif %}"><i class="ri-store-2-line"></i> Vendors &amp; Inventory</a>
+<a href="{% url 'vendor:manager_vendor_orders' %}" class="side-link {% if request.resolver_match.url_name == 'manager_order_list' %}active{% endif %}">
+  <i class="ri-shopping-bag-3-line"></i> Fulfilment Orders
+  {% if pending_counts.pending_orders %}<span class="count-pill">{{ pending_counts.pending_orders }}</span>{% endif %}
+</a>
+<a href="{% url 'parcel:manager_list' %}" class="side-link {% if request.resolver_match.app_name == 'parcel' and request.resolver_match.url_name|slice:':7' == 'manager' %}active{% endif %}">
+  <i class="ri-send-plane-2-line"></i> Parcels
+  {% if pending_counts.parcels_to_quote %}<span class="count-pill">{{ pending_counts.parcels_to_quote }}</span>{% endif %}
+</a>
+<a href="{% url 'reports:report_revenue' %}" class="side-link {% if request.resolver_match.url_name == 'revenue_report' %}active{% endif %}"><i class="ri-money-dollar-circle-line"></i> Revenue</a>
+<a href="{% url 'reports:report_cod' %}" class="side-link {% if request.resolver_match.url_name == 'cod_report' %}active{% endif %}"><i class="ri-hand-coin-line"></i> COD Ledger</a>
+<a href="/manager/audit/" class="side-link {% if '/manager/audit/' in request.path %}active{% endif %}"><i class="ri-file-shield-2-line"></i> Audit Trail</a>

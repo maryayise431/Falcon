@@ -1,0 +1,82 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Inventory · {{ vendor.vendorprofile.business_name|default:vendor.email }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'vendor:manager_vendors' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL VENDORS</a>
+    <h1 class="page-title mt-8">{{ vendor.vendorprofile.business_name|default:vendor.email|upper }}</h1>
+    <p class="page-sub">Confirm stock receipt into a warehouse and assign delivery agents.</p>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'vendor:manager_vendor_wallet' vendor.id %}" class="btn btn-outline">Wallet <i class="ri-wallet-3-line"></i></a>
+  </div>
+</div>
+
+<div class="panel">
+  {% if products %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>ITEM</th><th>PRICE</th><th>QTY</th><th>AVAILABLE</th><th>WAREHOUSE</th><th>STATE</th><th>AGENT</th><th>ACTION</th></tr></thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td style="font-weight:600;color:var(--white);">{{ product.name }}</td>
+          <td class="mono">{{ product.price|floatformat:2 }}</td>
+          <td class="mono">{{ product.quantity_total }}</td>
+          <td class="mono">{{ product.quantity_available }}</td>
+          <td>{{ product.warehouse.name|default:"—" }}</td>
+          <td><span class="status-badge st-{{ product.status }}">{{ product.get_status_display }}</span></td>
+          <td>
+            {% if product.status == 'received' and user.role == 'manager' and not product.assigned_agent %}
+            <form method="post" class="flex" style="gap:4px;align-items:center;" data-confirm="Assign agent to '{{ product.name }}'?">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="assign_agent" />
+              <input type="hidden" name="product_id" value="{{ product.id }}" />
+              <select name="agent_id" class="form-input" style="min-width:130px;font-size:0.75rem;">
+                <option value="">Select agent...</option>
+                {% for agent in agents %}
+                <option value="{{ agent.id }}">
+                  {{ agent.full_name|default:agent.user.email }}{% if agent.address %} — {{ agent.address }}{% endif %}
+                </option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-outline btn-sm">Set</button>
+            </form>
+            {% elif product.assigned_agent %}
+            <span class="mono" style="font-size:0.66rem;color:var(--lime);">{{ product.assigned_agent.full_name|default:product.assigned_agent.user.email }}{% if product.assigned_agent.address %} <span style="color:var(--grey);">— {{ product.assigned_agent.address|truncatechars:24 }}</span>{% endif %}</span>
+            {% else %}
+            <span class="mono text-grey" style="font-size:0.66rem;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if product.status == 'pending' and user.role == 'manager' %}
+            <form method="post" class="flex" style="gap:4px;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="receive_stock" />
+              <input type="hidden" name="product_id" value="{{ product.id }}" />
+              <select name="warehouse" class="form-input" style="min-width:130px;font-size:0.75rem;" required>
+                <option value="">Warehouse…</option>
+                {% for w in warehouses %}
+                <option value="{{ w.id }}">{{ w.name }} — {{ w.address|truncatechars:30 }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-solid btn-sm">Receive</button>
+            </form>
+            {% elif product.status == 'pending' %}
+            <span class="mono text-grey" style="font-size:0.62rem;">MANAGER ONLY</span>
+            {% else %}
+            <span class="mono text-grey" style="font-size:0.62rem;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-archive-2-line"></i>This vendor hasn't registered stock yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

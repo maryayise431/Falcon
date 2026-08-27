@@ -1,0 +1,43 @@
+{% extends "base_dashboard.html" %}
+{% load static %}{% block topbar_title %}Withdraw{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">WITHDRAW FUNDS</h1>
+    <p class="page-sub">Payouts are sent via Paystack to your verified bank account. A &#8358;{{ WITHDRAWAL_FEE|floatformat:0 }} charge applies per withdrawal.</p>
+  </div>
+  <a href="{% url 'vendor:withdrawals' %}" class="btn btn-outline">Request History</a>
+</div>
+
+<div class="grid-2" style="max-width:900px;">
+  <div class="panel">
+    <form method="post" novalidate data-confirm="Request this payout? A &#8358;{{ WITHDRAWAL_FEE|floatformat:0 }} fee applies." class="panel-body stack">
+      {% csrf_token %}
+      {% include "partials/form_fields.html" %}
+      <div id="withdraw-preview" data-fee="{{ WITHDRAWAL_FEE }}" class="hidden field-hint"></div>
+      <button type="submit" class="btn btn-solid" {% if not bank_ready %}disabled{% endif %}>Request Payout <i class="ri-send-plane-line"></i></button>
+      {% if not bank_ready %}
+      <p class="notice-strip" style="margin:0;"><i class="ri-lock-line"></i> Withdrawals unlock after you verify a bank account.</p>
+      {% endif %}
+    </form>
+  </div>
+
+  <aside class="panel">
+    <div class="panel-head"><span class="panel-title">PAYOUT ACCOUNT</span></div>
+    <div class="panel-body stack">
+      <div class="kv-row"><span class="kv-key">Available</span><span class="kv-val green mono">&#8358;{{ wallet.balance|floatformat:2 }}</span></div>
+      <div class="kv-row"><span class="kv-key">Bank</span><span class="kv-val">{{ profile.bank_name|default:"Not set" }}</span></div>
+      <div class="kv-row"><span class="kv-key">Account</span><span class="kv-val mono">{{ profile.bank_account_number|default:"—" }}</span></div>
+      <div class="kv-row"><span class="kv-key">Verified</span>
+        {% if bank_ready %}<span class="status-badge st-delivered">Yes</span>{% else %}<span class="status-badge st-failed">No</span>{% endif %}
+      </div>
+      <a href="{% url 'vendor:bank' %}" class="mono text-green mt-8" style="font-size:0.68rem;">MANAGE BANK ACCOUNT <i class="ri-arrow-right-line"></i></a>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/wallet.js' %}"></script>{% endblock %}
+

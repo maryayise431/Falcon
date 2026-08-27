@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.pyc
+
+# Django (runtime data / secrets — don't ship into image)
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Secrets
+.env
+.env.*
+
+# Git / tooling
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Pipenv
+Pipfile
+Pipfile.lock

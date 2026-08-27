@@ -1,0 +1,34 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Withdrawal Requests{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">WITHDRAWAL REQUESTS</h1></div>
+  <a href="{% url 'vendor:withdraw' %}" class="btn btn-solid">New Request <i class="ri-add-line"></i></a>
+</div>
+
+<div class="panel">
+  {% if withdrawals %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>DATE</th><th>REQUESTED</th><th>CHARGE</th><th>YOU RECEIVE</th><th>STATUS</th><th>PAYSTACK</th></tr></thead>
+      <tbody>
+        {% for w in withdrawals %}
+        <tr>
+          <td class="mono text-grey" style="font-size:0.7rem;">{{ w.requested_at|date:"d M Y H:i" }}</td>
+          <td class="mono">&#8358;{{ w.amount_requested|floatformat:2 }}</td>
+          <td class="mono text-grey">-&#8358;{{ w.withdrawal_charge|floatformat:0 }}</td>
+          <td class="mono text-lime">&#8358;{{ w.amount_transferred|floatformat:2 }}</td>
+          <td><span class="status-badge st-{{ w.status }}">{{ w.get_status_display }}</span></td>
+          <td>{% if w.paystack_transfer_code %}<span class="ref-code">{{ w.paystack_transfer_code|truncatechars:14 }}</span>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-bank-card-line"></i>No withdrawals yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

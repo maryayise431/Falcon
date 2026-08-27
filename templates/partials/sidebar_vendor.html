@@ -1,0 +1,23 @@
+﻿<a href="{% url 'vendor:dashboard' %}" class="side-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="ri-dashboard-line"></i> Dashboard</a>
+<a href="{% url 'vendor:inventory' %}" class="side-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}"><i class="ri-archive-2-line"></i> Inventory</a>
+<a href="{% url 'vendor:order_create' %}" class="side-link {% if request.resolver_match.url_name == 'create_order' %}active{% endif %}"><i class="ri-add-circle-line"></i> New Order</a>
+<a href="{% url 'parcel:send' %}" class="side-link {% if request.resolver_match.url_name == 'send' %}active{% endif %}"><i class="ri-send-plane-2-line"></i> Send a Parcel</a>
+<a href="{% url 'vendor:orders' %}" class="side-link {% if request.resolver_match.url_name == 'order_list' %}active{% endif %}">
+  <i class="ri-shopping-bag-3-line"></i> Orders
+  {% if pending_counts.active_orders %}<span class="count-pill">{{ pending_counts.active_orders }}</span>{% endif %}
+</a>
+<a href="{% url 'parcel:history' %}" class="side-link {% if request.resolver_match.app_name == 'parcel' and request.resolver_match.url_name != 'send' %}active{% endif %}">
+  <i class="ri-archive-stack-line"></i> My Parcels
+  {% if pending_counts.vendor_parcels %}<span class="count-pill">{{ pending_counts.vendor_parcels }}</span>{% endif %}
+</a>
+<a href="{% url 'vendor:wallet' %}" class="side-link {% if request.resolver_match.url_name == 'wallet' %}active{% endif %}"><i class="ri-wallet-3-line"></i> Wallet
+  {% if pending_counts.wallet_balance is not None %}
+    <span class="count-pill" style="background:rgba(139,255,74,0.15);color:var(--lime);">&#8358;{{ pending_counts.wallet_balance|floatformat:0 }}</span>
+  {% endif %}
+</a>
+<a href="{% url 'vendor:withdraw' %}" class="side-link {% if request.resolver_match.url_name == 'withdraw' %}active{% endif %}"><i class="ri-bank-card-line"></i> Withdraw</a>
+<a href="{% url 'vendor:withdrawals' %}" class="side-link {% if request.resolver_match.url_name == 'withdrawals' %}active{% endif %}"><i class="ri-file-list-3-line"></i> Requests</a>
+<a href="{% url 'vreports:orders' %}" class="side-link {% if request.resolver_match.app_name == 'vreports' and request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="ri-bar-chart-box-line"></i> Reports</a>
+<a href="{% url 'vreports:settlements' %}" class="side-link {% if request.resolver_match.app_name == 'vreports' and request.resolver_match.url_name == 'settlements' %}active{% endif %}"><i class="ri-hand-coin-line"></i> Settlements</a>
+<a href="{% url 'vendor:bank' %}" class="side-link {% if request.resolver_match.url_name == 'bank' %}active{% endif %}"><i class="ri-bank-line"></i> Bank Account</a>
+<a href="{% url 'vendor:profile' %}" class="side-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="ri-user-settings-line"></i> Profile</a>

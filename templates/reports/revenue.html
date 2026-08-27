@@ -1,0 +1,54 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+{% block topbar_title %}Revenue{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; MONEY IN /&gt;</p>
+    <h1 class="page-title">REVENUE</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <select name="period" id="period-select" class="form-input">
+      {% for value, label in period_choices %}
+      <option value="{{ value }}" {% if period == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="stat-cards">
+  {% for row in breakdown.rows %}
+  <div class="stat-card"><span class="stat-label">{{ row.label|upper }}</span><span class="stat-value green">&#8358;{{ row.amount|floatformat:0 }}</span></div>
+  {% endfor %}
+  <div class="stat-card"><span class="stat-label">TOTAL REVENUE</span><span class="stat-value">&#8358;{{ breakdown.total|floatformat:0 }}</span><i class="ri-funds-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">COD HANDLED (NOT REVENUE)</span><span class="stat-value text-grey" style="font-size:1.3rem;padding-top:6px;">&#8358;{{ breakdown.cod_handled|floatformat:0 }}</span><i class="ri-hand-coin-line stat-icon"></i></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><span class="panel-title">BREAKDOWN</span>
+    <span class="mono text-grey" style="font-size:0.62rem;">{{ start|date:"d M Y" }} – {{ end|date:"d M Y" }}</span>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>STREAM</th><th>AMOUNT</th><th>SHARE</th></tr></thead>
+      <tbody>
+        {% for row in breakdown.rows %}
+        <tr>
+          <td style="color:var(--white);">{{ row.label }}</td>
+          <td class="mono">&#8358;{{ row.amount|floatformat:2 }}</td>
+          <td style="min-width:180px;">
+            <div class="progress"><div class="progress-bar" style="width: {% widthratio row.amount breakdown.total 100 %}%"></div></div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="notice-strip mt-24"><i class="ri-information-line"></i> COD collected on behalf of vendors is custodial cash — it settles to wallets and is never counted as revenue.</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/reports.js' %}"></script>{% endblock %}

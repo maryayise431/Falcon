@@ -1,0 +1,51 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Marketplace{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_customer.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; WELCOME BACK /&gt;</p>
+    <h1 class="page-title">HELLO, {{ user.customerprofile.full_name|default:user.email|truncatechars:18 }}</h1>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'marketplace:home' %}" class="btn btn-solid">Shop Now <i class="ri-store-2-line"></i></a>
+    <a href="{% url 'parcel:send' %}" class="btn btn-outline">Send a Parcel</a>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">TOTAL ORDERS</span><span class="stat-value">{{ total_orders }}</span><i class="ri-shopping-bag-3-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">ACTIVE ORDERS</span><span class="stat-value green">{{ active_orders }}</span><i class="ri-truck-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">DELIVERED</span><span class="stat-value">{{ delivered_orders }}</span><i class="ri-checkbox-circle-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">PARCELS SENT</span><span class="stat-value">{{ parcels_sent }}</span><i class="ri-send-plane-2-line stat-icon"></i></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <span class="panel-title">RECENT ORDERS</span>
+    <a href="{% url 'customer:orders' %}" class="mono text-green" style="font-size:0.7rem;">VIEW ALL <i class="ri-arrow-right-line"></i></a>
+  </div>
+  {% if recent_orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>DATE</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td><a href="{% url 'marketplace:order_confirmation' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+          <td class="mono">&#8358;{{ order.total_amount|floatformat:2 }}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          <td><a href="{% url 'tracking:detail' order.order_reference %}" class="mono text-green" style="font-size:0.68rem;">TRACK <i class="ri-arrow-right-line"></i></a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-shopping-bag-3-line"></i>No orders yet — the marketplace awaits.<br /><a href="{% url 'marketplace:home' %}" class="text-green mono mt-8" style="display:inline-block;">BROWSE PRODUCTS <i class="ri-arrow-right-line"></i></a></div>
+  {% endif %}
+</div>
+{% endblock %}
+

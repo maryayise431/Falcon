@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Falcon Delivery Service — Buy It. We Deliver It.{% endblock %}
+{% block meta_description %}Falcon Delivery Service connects local vendors to customers with same-day delivery, real-time tracking, and automated payouts.{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}" />
+{% endblock %}
+
+{% block navbar %}
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-text">
+        <span class="brand">FALCON</span>
+        <span class="sub">Delivery Services</span>
+      </span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="/track/">Track Item</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#products">Shop</a></li>
+      <li><a href="#vendor-cta">For Vendors</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode">
+        <i class="ri-sun-fill"></i>
+      </button>
+      {% if user.is_authenticated %}
+        <a href="{{ role_home }}" class="btn btn-outline btn-sm">Dashboard</a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-sm">Login</a>
+      {% endif %}
+      <a href="/marketplace/" class="btn btn-green btn-sm">Shop Now</a>
+    </div>
+
+    <div class="nav-mobile-actions">
+      <button class="theme-toggle" id="themeToggleMobile" aria-label="Toggle dark/light mode">
+        <i class="ri-sun-fill"></i>
+      </button>
+      <div class="hamburger" id="hamburger">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-nav" id="mobileNav">
+  <a href="/track/">Track Item</a>
+  <a href="#services">Services</a>
+  <a href="#products">Shop</a>
+  <a href="#vendor-cta">For Vendors</a>
+  {% if user.is_authenticated %}
+  <a href="{{ role_home }}" class="mobile-cta-link">My Dashboard</a>
+  {% else %}
+  <a href="{% url 'accounts:login' %}" class="mobile-cta-link">Login</a>
+  {% endif %}
+</div>
+{% endblock navbar %}
+
+{% block content %}
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-streaks">
+    <span class="s s1"></span>
+    <span class="s s2"></span>
+    <span class="s s3"></span>
+    <span class="s s4"></span>
+  </div>
+
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <span class="pulse"></span>
+          NOW DELIVERING ACROSS THE COUNTRY
+        </div>
+
+        <h1 class="display-xl hero-title">Order it!<br> <span class="green-word">We store</span>,<br>sell?  <span class="green-word">we deliver</span> it.</h1>
+
+        <p class="hero-body">Falcon Delivery Service is a reliable logistics company dedicated to providing fast, secure, and affordable delivery solutions for e-commerce vendors, businesses, and individuals. We specialize in same-day and scheduled deliveries, ensuring that products and parcels reach customers safely and on time.</p>
+
+        <div class="hero-actions">
+          <a href="#products" class="btn btn-green">Shop Products <i class="ri-arrow-right-line"></i></a>
+          <a href="#vendor-cta" class="btn btn-outline">Become a Vendor</a>
+        </div>
+
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num">12K+</div>
+            <div class="hero-stat-label">ORDERS DELIVERED</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">340+</div>
+            <div class="hero-stat-label">ACTIVE VENDORS</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">45min</div>
+            <div class="hero-stat-label">AVG. DELIVERY TIME</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="delivery-ui">
+          <div class="dui-header">
+            <span class="dui-title">LIVE ORDERS</span>
+            <span class="dui-live">TRACKING</span>
+          </div>
+
+          <div class="dui-map">
+            <div class="dui-map-grid"></div>
+            <div class="dui-route"></div>
+            <div class="dui-pin origin"></div>
+            <div class="dui-pin dest"></div>
+            <div class="dui-bike"><i class="ri-motorbike-fill"></i></div>
+          </div>
+
+          <div class="dui-order">
+            <div class="dui-order-icon icon-green"><i class="ri-box-3-fill"></i></div>
+            <div class="dui-order-info">
+              <div class="dui-order-name">Order #FD-2291</div>
+              <div class="dui-order-loc">Ikeja <i class="ri-arrow-right-line"></i> Yaba</div>
+            </div>
+            <span class="dui-status status-in-transit">IN TRANSIT</span>
+          </div>
+
+          <div class="dui-order">
+            <div class="dui-order-icon icon-lime"><i class="ri-shopping-bag-3-fill"></i></div>
+            <div class="dui-order-info">
+              <div class="dui-order-name">Order #FD-2292</div>
+              <div class="dui-order-loc">Warehouse A</div>
+            </div>
+            <span class="dui-status status-picked-up">PICKED UP</span>
+          </div>
+
+          <div class="dui-order">
+            <div class="dui-order-icon icon-grey"><i class="ri-hourglass-fill"></i></div>
+            <div class="dui-order-info">
+              <div class="dui-order-name">Order #FD-2293</div>
+              <div class="dui-order-loc">Awaiting agent</div>
+            </div>
+            <span class="dui-status status-pending">PENDING</span>
+          </div>
+
+          <div class="dui-float">&check; DELIVERED IN 38 MIN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH BAR -->
+<section id="search" class="section-pad" style="padding-top:0;">
+  <div class="container">
+    <div style="max-width:600px;margin:0 auto;text-align:center;">
+      <form action="/marketplace/" method="get" style="display:flex;gap:0;max-width:500px;margin:0 auto;">
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Search for products, vendors, categories..." aria-label="Search products" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius) 0 0 var(--radius);padding:14px 18px;color:var(--white);font-size:0.9rem;font-family:var(--font-body);outline:none;">
+        <button type="submit" class="btn btn-green" style="border-radius:0 var(--radius) var(--radius) 0;padding:14px 24px;"><i class="ri-search-line"></i> Search</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section id="categories" class="section-pad">
+  <div class="container">
+    <div class="reveal" style="text-align:center;margin-bottom:32px;">
+      <div class="eyebrow">Browse by Category</div>
+      <h2 class="display-lg">Find what <span class="green-word">you need</span>.</h2>
+    </div>
+    <div class="services-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+      {% for category in categories %}
+      <a href="/marketplace/?category={{ category.slug }}" class="service-card reveal reveal-delay-{% cycle '1' '2' '3' '4' %}" style="text-align:center;text-decoration:none;">
+        <span class="service-icon"><i class="{{ category.icon|default:'ri-store-2-fill' }}"></i></span>
+        <div class="service-title">{{ category.name }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="section-pad">
+  <span class="streak"></span>
+  <div class="container">
+    <div class="steps-intro reveal">
+      <div class="eyebrow">The Process</div>
+      <h2 class="display-lg">From vendor shelf<br>to <span class="green-word">customer door</span>.</h2>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-block reveal reveal-delay-1">
+        <div class="step-num">01</div>
+        <div class="step-icon"><i class="ri-inbox-archive-fill"></i></div>
+        <div class="step-title">VENDOR SENDS STOCK</div>
+        <div class="step-desc">A registered vendor lists products and ships inventory to a Falcon warehouse, where we store and manage it for them.</div>
+        <div class="step-arrow"><i class="ri-arrow-right-line"></i></div>
+      </div>
+
+      <div class="step-block reveal reveal-delay-2">
+        <div class="step-num">02</div>
+        <div class="step-icon"><i class="ri-shopping-cart-2-fill"></i></div>
+        <div class="step-title">CUSTOMER ORDERS</div>
+        <div class="step-desc">Vendors get an order and inputs customer details.</div>
+        <div class="step-arrow"><i class="ri-arrow-right-line"></i></div>
+      </div>
+
+      <div class="step-block reveal reveal-delay-3">
+        <div class="step-num">03</div>
+        <div class="step-icon"><i class="ri-motorbike-fill"></i></div>
+        <div class="step-title">AGENT ASSIGNED</div>
+        <div class="step-desc">The nearest available delivery agent is automatically matched to the order and picks it up from the warehouse.</div>
+        <div class="step-arrow"><i class="ri-arrow-right-line"></i></div>
+      </div>
+
+      <div class="step-block reveal reveal-delay-4">
+        <div class="step-num">04</div>
+        <div class="step-icon"><i class="ri-checkbox-circle-fill"></i></div>
+        <div class="step-title">TRACKED &amp; DELIVERED</div>
+        <div class="step-desc">The customer tracks the order live until it arrives, and the vendor's remittance is calculated automatically.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services" class="section-pad">
+  <div class="container">
+    <div class="services-header">
+      <div class="reveal">
+        <div class="eyebrow">What We Do</div>
+        <h2 class="display-lg">Speed. Reliability.<br><span class="green-word">Peace of mind</span>.</h2>
+      </div>
+      <div class="services-lead reveal reveal-delay-1">
+        <p>Whether you are a growing online store, a small business, or an individual needing a trusted courier, Falcon Delivery Service is your dependable logistics partner, delivering speed, reliability, and peace of mind with every shipment.</p>
+      </div>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card reveal reveal-delay-1">
+        <span class="service-icon"><i class="ri-shopping-bag-3-fill"></i></span>
+        <div class="service-title">E-COMMERCE DELIVERY</div>
+        <div class="service-desc">Our services are designed to support online sellers by offering dependable order fulfillment, last-mile delivery, and efficient customer service that helps businesses build trust with their clients.</div>
+        <span class="service-tag">FOR VENDORS</span>
+      </div>
+
+      <div class="service-card accent-lime reveal reveal-delay-2">
+        <span class="service-icon"><i class="ri-send-plane-fill"></i></span>
+        <div class="service-title">PARCEL DELIVERY</div>
+        <div class="service-desc">In addition to serving e-commerce businesses, Falcon Delivery Service also provides convenient local parcel delivery for documents, gifts, personal items, and business packages.</div>
+        <span class="service-tag">FOR EVERYONE</span>
+      </div>
+
+      <div class="service-card accent-grey reveal reveal-delay-3">
+        <span class="service-icon"><i class="ri-motorbike-fill"></i></span>
+        <div class="service-title">LAST-MILE LOGISTICS</div>
+        <div class="service-desc">Our professional delivery team is committed to handling every package with care while maintaining prompt communication throughout the delivery process.</div>
+        <span class="service-tag">TRUSTED COURIER</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section id="why-us" class="section-pad">
+  <div class="container">
+    <div class="why-grid">
+      <div class="why-left reveal">
+        <div class="eyebrow">Why Falcon</div>
+        <h2 class="display-lg">Your dependable<br><span class="green-word">logistics partner</span>.</h2>
+        <p>Our services are designed to support online sellers by offering dependable order fulfillment, last-mile delivery, and efficient customer service that helps businesses build trust with their clients.</p>
+
+        <div class="why-perks">
+          <div class="perk"><span class="perk-check">&check;</span> Same-day and scheduled deliveries</div>
+          <div class="perk"><span class="perk-check">&check;</span> Fast, secure, and affordable delivery solutions</div>
+          <div class="perk"><span class="perk-check">&check;</span> Professional team handling every package with care</div>
+          <div class="perk"><span class="perk-check">&check;</span> Prompt communication throughout the delivery process</div>
+        </div>
+
+        <a href="#products" class="btn btn-green">Start Shopping <i class="ri-arrow-right-line"></i></a>
+      </div>
+
+      <div class="why-right reveal reveal-delay-2">
+        <div class="metric-card featured">
+          <div class="metric-icon"><i class="ri-line-chart-fill"></i></div>
+          <div class="metric-num">98%</div>
+          <div class="metric-label">ON-TIME DELIVERY RATE</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon"><i class="ri-timer-fill"></i></div>
+          <div class="metric-num">45min</div>
+          <div class="metric-label">AVG. DELIVERY TIME</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon"><i class="ri-shield-check-fill"></i></div>
+          <div class="metric-num">100%</div>
+          <div class="metric-label">SECURE HANDLING</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS PREVIEW -->
+<section id="products" class="section-pad">
+  <div class="container">
+    <div class="products-header reveal">
+      <div>
+        <div class="eyebrow">Marketplace</div>
+        <h2 class="display-lg">Fresh off the <span class="green-word">shelf</span>.</h2>
+      </div>
+      <div class="products-controls">
+        <div class="view-toggle" id="viewToggle">
+          <button type="button" class="view-btn active" data-view="grid" aria-label="Grid view"><i class="ri-grid-fill"></i></button>
+          <button type="button" class="view-btn" data-view="list" aria-label="List view"><i class="ri-list-unordered"></i></button>
+        </div>
+        <a href="/marketplace/" class="btn btn-ghost">View All Products <i class="ri-arrow-right-line"></i></a>
+      </div>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      {% for product in featured_products %}
+      <a href="{% url 'marketplace:product_detail' product.slug %}" class="product-card reveal reveal-delay-{% cycle '1' '2' '3' '4' %}">
+        <div class="product-img bg-fashion">
+          {% with img=product.primary_image %}
+          {% if img %}
+          <img src="{{ img.image.url }}" alt="{{ product.name }}" loading="lazy">
+          {% else %}
+          <div class="img-placeholder"><i class="ri-image-line"></i></div>
+          {% endif %}
+          {% endwith %}
+        </div>
+        <div class="product-body">
+          <div class="product-cat">{{ product.category.name|default:"General" }}</div>
+          <div class="product-name">{{ product.name }}</div>
+          <div class="product-vendor">Sold on Falcon Marketplace</div>
+          <div class="product-footer">
+            <span class="product-price">&#8358;{{ product.price|floatformat:0 }}</span>
+            <span class="product-btn"><i class="ri-add-line"></i></span>
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="reveal" style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--grey);">
+        <i class="ri-shopping-bag-3-line" style="font-size:2.5rem;color:var(--green);"></i>
+        <p>The shelves are being stocked. Check back soon.</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="products-cta reveal">
+      <a href="/marketplace/" class="btn btn-outline">Browse Full Catalog</a>
+    </div>
+  </div>
+</section>
+
+<!-- DELIVERY CTA -->
+<section id="delivery-cta" class="section-pad">
+  <div class="container">
+    <div class="why-grid">
+      <div class="why-left reveal">
+        <div class="eyebrow">Courier Service</div>
+        <h2 class="display-lg">Need something <span class="green-word">delivered</span>?</h2>
+        <p>In addition to serving e-commerce businesses, Falcon Delivery Service also provides convenient local parcel delivery for documents, gifts, personal items, and business packages. Our professional delivery team is committed to handling every package with care while maintaining prompt communication throughout the delivery process.</p>
+        <div class="why-perks">
+          <div class="perk"><span class="perk-check">&check;</span> Same-day pickup and delivery</div>
+          <div class="perk"><span class="perk-check">&check;</span> Real-time GPS tracking</div>
+          <div class="perk"><span class="perk-check">&check;</span> Photo proof of delivery</div>
+          <div class="perk"><span class="perk-check">&check;</span> Prompt communication throughout</div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="/parcel/send/" class="btn btn-green">Send a Parcel <i class="ri-arrow-right-line"></i></a>
+          <a href="/track/" class="btn btn-outline">Track a Package</a>
+        </div>
+      </div>
+      <div class="why-right reveal reveal-delay-2">
+        <div class="metric-card featured">
+          <div class="metric-icon"><i class="ri-motorbike-fill"></i></div>
+          <div class="metric-num">45min</div>
+          <div class="metric-label">AVG. DELIVERY TIME</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon"><i class="ri-map-pin-fill"></i></div>
+          <div class="metric-num">100%</div>
+          <div class="metric-label">REAL-TIME TRACKING</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon"><i class="ri-camera-fill"></i></div>
+          <div class="metric-num">PHOTO</div>
+          <div class="metric-label">PROOF OF DELIVERY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VENDOR CTA -->
+<section id="vendor-cta" class="section-pad">
+  <div class="vendor-cta-bg"></div>
+  <div class="container">
+    <div class="vendor-inner">
+      <div class="vendor-left reveal">
+        <div class="eyebrow">For Vendors</div>
+        <h2 class="display-lg">Sell more.<br>Worry <span class="green-word">less</span>.</h2>
+        <p>Send us your products and we handle the rest &mdash; storage, listing, delivery, and getting you paid. Our services are designed to support online sellers by offering dependable order fulfillment, last-mile delivery, and efficient customer service that helps businesses build trust with their clients.</p>
+
+        <div class="vendor-cards">
+          <div class="vendor-feat">
+            <div class="vendor-feat-icon"><i class="ri-file-edit-fill"></i></div>
+            <div>
+              <div class="vendor-feat-title">List products in minutes</div>
+              <div class="vendor-feat-desc">Register your account and upload your catalog straight away.</div>
+            </div>
+          </div>
+          <div class="vendor-feat">
+            <div class="vendor-feat-icon"><i class="ri-box-3-fill"></i></div>
+            <div>
+              <div class="vendor-feat-title">We store your stock</div>
+              <div class="vendor-feat-desc">Ship your products to us &mdash; we track every unit for you.</div>
+            </div>
+          </div>
+          <div class="vendor-feat">
+            <div class="vendor-feat-icon"><i class="ri-motorbike-fill"></i></div>
+            <div>
+              <div class="vendor-feat-title">Delivery, handled</div>
+              <div class="vendor-feat-desc">Every order is auto-assigned to an agent and tracked to the door.</div>
+            </div>
+          </div>
+          <div class="vendor-feat">
+            <div class="vendor-feat-icon"><i class="ri-money-dollar-circle-fill"></i></div>
+            <div>
+              <div class="vendor-feat-title">Get paid automatically</div>
+              <div class="vendor-feat-desc">Remittances are calculated after every successful delivery.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vendor-actions">
+          <a href="{% url 'accounts:register_vendor' %}" class="btn btn-green">Register as a Vendor <i class="ri-arrow-right-line"></i></a>
+          <a href="/vendor/dashboard/" class="btn btn-outline">View Vendor Dashboard</a>
+        </div>
+      </div>
+
+      <div class="vendor-right reveal reveal-delay-2">
+        <div class="dash-preview">
+          <div class="dash-header">
+            <span class="dash-title">VENDOR DASHBOARD</span>
+            <span class="dash-tag">THIS WEEK</span>
+          </div>
+          <div class="dash-kpis">
+            <div class="kpi">
+              <div class="kpi-val">&#8358;482K</div>
+              <div class="kpi-key">REVENUE</div>
+              <div class="kpi-up"><i class="ri-arrow-up-line"></i> 12%</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-val">96</div>
+              <div class="kpi-key">ORDERS</div>
+              <div class="kpi-up"><i class="ri-arrow-up-line"></i> 8%</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-val">214</div>
+              <div class="kpi-key">IN STOCK</div>
+              <div class="kpi-up"><i class="ri-arrow-up-line"></i> 3%</div>
+            </div>
+          </div>
+          <div class="dash-chart">
+            <div class="bar" style="height:35%"></div>
+            <div class="bar" style="height:55%"></div>
+            <div class="bar hi" style="height:80%"></div>
+            <div class="bar" style="height:45%"></div>
+            <div class="bar hi" style="height:90%"></div>
+            <div class="bar" style="height:60%"></div>
+            <div class="bar hi" style="height:75%"></div>
+          </div>
+          <div class="dash-orders">
+            <div class="dash-order-row">
+              <span class="dash-dot dot-green"></span>
+              <span class="dash-order-name">Order #FD-2291 &middot; Delivered</span>
+              <span class="dash-order-amt">+&#8358;12,400</span>
+            </div>
+            <div class="dash-order-row">
+              <span class="dash-dot dot-lime"></span>
+              <span class="dash-order-name">Order #FD-2288 &middot; Delivered</span>
+              <span class="dash-order-amt">+&#8358;8,900</span>
+            </div>
+            <div class="dash-order-row">
+              <span class="dash-dot dot-grey"></span>
+              <span class="dash-order-name">Order #FD-2295 &middot; Pending</span>
+              <span class="dash-order-amt">&#8358;5,200</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock content %}
+
+{% block footer %}
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">FALCON</div>
+        <div class="footer-brand-sub">Delivery Services</div>
+        <p class="footer-brand-desc">A marketplace and delivery network for local vendors &mdash; we store, sell, and deliver, so vendors can focus on their products.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn" aria-label="Twitter / X"><i class="ri-twitter-x-fill"></i></a>
+          <a href="#" class="social-btn" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a>
+          <a href="#" class="social-btn" aria-label="Instagram"><i class="ri-instagram-fill"></i></a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">COMPANY</div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="/marketplace/">Marketplace</a>
+          <a href="/track/">Track an Order</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">FOR VENDORS</div>
+        <div class="footer-links">
+          <a href="{% url 'accounts:register_vendor' %}">Register as Vendor</a>
+          <a href="/vendor/dashboard/">Vendor Dashboard</a>
+          <a href="/vendor/wallet/">Wallet &amp; Payouts</a>
+          <a href="{% url 'accounts:login' %}">Vendor Login</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">FOR CUSTOMERS</div>
+        <div class="footer-links">
+          <a href="/marketplace/">Shop Products</a>
+          <a href="/parcel/send/">Send a Parcel</a>
+          <a href="/track/">Track My Order</a>
+          <a href="{% url 'accounts:register_vendor' %}">Create Account</a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="footer-divider">
+
+    <div class="footer-bottom">
+      <span class="footer-copy">&copy; {% now "Y" %} FALCON DELIVERY SERVICE. ALL RIGHTS RESERVED.</span>
+      <div class="footer-legal">
+        <a href="/privacy/">Privacy Policy</a>
+        <a href="/terms/">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+</footer>
+{% endblock footer %}

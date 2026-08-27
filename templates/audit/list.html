@@ -1,0 +1,46 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Audit Trail{% endblock %}
+{% block sidebar_nav %}{% if user.role == 'manager' %}{% include "partials/sidebar_manager.html" %}{% else %}{% include "partials/sidebar_submanager.html" %}{% endif %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; WHO DID WHAT /&gt;</p>
+    <h1 class="page-title">AUDIT TRAIL</h1>
+  </div>
+  <form method="get" class="filter-bar">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Search description, reason, actor..." class="form-input" />
+    <select name="action" class="form-input" onchange="this.form.submit()">
+      <option value="">All actions</option>
+      {% for value, label in actions %}
+      <option value="{{ value }}" {% if action_filter == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel">
+  {% if logs %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>WHEN</th><th>ACTOR</th><th>ACTION</th><th>DESCRIPTION</th><th>REASON</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="mono text-grey" style="font-size:0.66rem;white-space:nowrap;">{{ log.created_at|date:"d M Y H:i" }}</td>
+          <td>{{ log.actor.email|default:"system"|truncatechars:20 }}</td>
+          <td><span class="status-badge st-processing">{{ log.action }}</span></td>
+          <td style="max-width:320px;">{{ log.description|truncatechars:90 }}</td>
+          <td style="color:var(--grey);">{{ log.reason|default:"—"|truncatechars:24 }}</td>
+          <td class="mono text-grey" style="font-size:0.62rem;">{{ log.ip_address|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-file-shield-2-line"></i>No audit entries match.</div>
+  {% endif %}
+</div>
+{% endblock %}

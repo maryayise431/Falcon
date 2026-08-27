@@ -1,0 +1,71 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Vendors Inventory{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow mono">&lt; VENDORS INVENTORY /&gt;</p>
+    <h1 class="page-title">VENDORS INVENTORY</h1>
+    <p class="page-sub">All vendor stock in one view. Confirm receipt and assign delivery agents directly.</p>
+  </div>
+  <form method="get" class="filter-bar">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Search vendor or product..." class="form-input" />
+    <button type="submit" class="btn btn-outline"><i class="ri-search-line"></i></button>
+  </form>
+</div>
+
+<div class="panel">
+  {% if products %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>VENDOR</th><th>PRODUCT</th><th>PRICE</th><th>QTY</th><th>AVAILABLE</th><th>WAREHOUSE</th><th>STATE</th><th>AGENT</th><th>ACTIONS</th></tr></thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td style="font-weight:600;color:var(--white);">{{ product.vendor.vendorprofile.business_name|default:product.vendor.email }}</td>
+          <td>{{ product.name }}</td>
+          <td class="mono">{{ product.price|floatformat:2 }}</td>
+          <td class="mono">{{ product.quantity_total }}</td>
+          <td class="mono">{{ product.quantity_available }}</td>
+          <td>{{ product.warehouse.name|default:"—" }}</td>
+          <td><span class="status-badge st-{{ product.status }}">{{ product.get_status_display }}</span></td>
+          <td>
+            {% if product.status == 'received' and user.role == 'manager' and not product.assigned_agent %}
+            <form method="post" class="flex" style="gap:4px;align-items:center;" data-confirm="Assign agent to '{{ product.name }}'?">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="assign_agent" />
+              <input type="hidden" name="product_id" value="{{ product.id }}" />
+              <select name="agent_id" class="form-input" style="min-width:130px;font-size:0.72rem;">
+                <option value="">Select agent...</option>
+                {% for agent in agents %}
+                <option value="{{ agent.id }}">
+                  {{ agent.full_name|default:agent.user.email }}{% if agent.address %} — {{ agent.address }}{% endif %}
+                </option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-outline btn-sm">Set</button>
+            </form>
+            {% elif product.assigned_agent %}
+            <span class="mono" style="font-size:0.66rem;color:var(--lime);">{{ product.assigned_agent.full_name|default:product.assigned_agent.user.email }}{% if product.assigned_agent.address %} <span style="color:var(--grey);">— {{ product.assigned_agent.address|truncatechars:24 }}</span>{% endif %}</span>
+            {% else %}
+            <span class="mono text-grey" style="font-size:0.66rem;">—</span>
+            {% endif %}
+          </td>
+          <td style="display:flex;gap:4px;flex-wrap:nowrap;">
+            <a href="{% url 'vendor:manager_product_detail' product.id %}" class="btn btn-outline btn-sm" title="View details"><i class="ri-eye-line"></i></a>
+            <form method="post" action="{% url 'vendor:manager_product_delete' product.id %}" style="display:inline;" data-confirm="Delete '{{ product.name }}'?">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline btn-sm" style="border-color:var(--red);color:var(--red);" title="Delete"><i class="ri-delete-bin-line"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-empty"><i class="ri-archive-2-line"></i>No vendor inventory yet. Vendors register stock from their dashboard.</div>
+  {% endif %}
+</div>
+{% endblock %}

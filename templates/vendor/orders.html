@@ -1,0 +1,47 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}My Orders{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div><h1 class="page-title">FULFILMENT ORDERS</h1></div>
+  <div class="page-actions">
+    <form method="get" class="filter-bar">
+      <input type="text" name="q" value="{{ search_query }}" placeholder="Ref or customer..." class="form-input" />
+      <select name="status" class="form-input" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="{% url 'vendor:order_create' %}" class="btn btn-solid">New Order <i class="ri-add-line"></i></a>
+  </div>
+</div>
+
+<div class="panel">
+  {% if orders %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th>REF</th><th>CUSTOMER</th><th>ITEM</th><th>COD</th><th>FEE</th><th>STATUS</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'vendor:order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
+          <td>{{ order.customer_name|truncatechars:16 }}<br /><span class="mono text-grey" style="font-size:0.6rem;">{{ order.customer_phone }}</span></td>
+          <td>{{ order.product_name|truncatechars:18 }} &times; {{ order.quantity }}</td>
+          <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
+          <td class="mono text-grey">&#8358;{{ order.delivery_fee|floatformat:0|default:"—" }}</td>
+          <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:0 20px;">{% include "partials/pagination.html" %}</div>
+  {% else %}
+  <div class="table-empty"><i class="ri-inbox-line"></i>No orders match.</div>
+  {% endif %}
+</div>
+{% endblock %}
+

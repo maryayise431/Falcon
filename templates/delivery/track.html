@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Track Shipment{% endblock %}
+
+{% block content %}
+<section class="track-hero">
+  <div class="container" style="max-width:560px;">
+    <div class="panel" style="overflow:visible;">
+      <div class="panel-body" style="text-align:center;padding:40px 32px 32px;">
+        <div style="margin-bottom:16px;">
+          <i class="ri-radar-line" style="font-size:2.2rem;color:var(--green);"></i>
+        </div>
+        <h1 class="page-title" style="margin-bottom:6px;">TRACK YOUR SHIPMENT</h1>
+        <p class="page-sub" style="margin-bottom:24px;">Enter any Falcon reference &mdash; FD, MK, VO or PR &mdash; no login needed.</p>
+
+        <form action="{% url 'tracking:search' %}" method="get" style="display:flex;gap:10px;margin-bottom:16px;">
+          <input type="text" name="ref" value="{{ reference }}" placeholder="e.g. VO-8F3K2A" class="form-input mono" required style="flex:1;text-transform:uppercase;letter-spacing:0.08em;" />
+          <button type="submit" class="btn btn-solid" style="white-space:nowrap;"><i class="ri-search-line"></i> Track</button>
+        </form>
+
+        {% if reference %}
+        <a href="{% url 'tracking:detail' reference %}" class="btn btn-outline btn-sm" style="width:100%;">
+          <i class="ri-arrow-right-line"></i> View results for {{ reference }}
+        </a>
+        {% endif %}
+
+        <div style="margin-top:20px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+          <span class="mono text-grey" style="font-size:0.58rem;letter-spacing:0.08em;padding:4px 10px;border:1px solid var(--border);border-radius:999px;">PR-xxxxx Parcels</span>
+          <span class="mono text-grey" style="font-size:0.58rem;letter-spacing:0.08em;padding:4px 10px;border:1px solid var(--border);border-radius:999px;">VO-xxxxx Vendor Orders</span>
+          <span class="mono text-grey" style="font-size:0.58rem;letter-spacing:0.08em;padding:4px 10px;border:1px solid var(--border);border-radius:999px;">MK-xxxxx Marketplace</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="auth-footnote" style="text-align:center;margin-top:16px;">Need help? Contact <a href="mailto:support@falcon.ng">support@falcon.ng</a> with your reference.</p>
+  </div>
+</section>
+{% endblock %}

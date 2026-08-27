@@ -1,0 +1,11 @@
+Django>=5.2,<6.0
+python-dotenv
+pillow
+django-crispy-forms
+crispy-bootstrap5
+whitenoise
+requests
+psycopg2-binary
+gunicorn
+
+

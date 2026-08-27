@@ -1,0 +1,64 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Order {{ order.order_reference }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_vendor.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'vendor:orders' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL ORDERS</a>
+    <h1 class="page-title mt-8">{{ order.order_reference }}</h1>
+  </div>
+  <span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">JOURNEY</span></div>
+    <div class="panel-body">
+      {% if order.status == 'pending' %}
+      <p class="page-sub">Waiting for Falcon to process your order and set the delivery fee.</p>
+      {% endif %}
+      <ul class="timeline">
+        <li class="tl-step done"><span class="tl-dot"></span><span class="tl-label">Order placed</span><div class="tl-time mono">{{ order.created_at|date:"d M Y H:i" }}</div></li>
+        <li class="tl-step {% if order.status == 'pending' %}current{% else %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">Processing by Falcon</span></li>
+        <li class="tl-step {% if order.status == 'awaiting_assignment' or order.status == 'assigned' %}done{% elif order.status != 'pending' and order.status != 'processing' and order.status != 'cancelled' %}done{% endif %}">
+          <span class="tl-dot"></span><span class="tl-label">Awaiting rider assignment</span>
+          {% if order.assigned_agent %}<div class="tl-time mono">AGENT: {{ order.assigned_agent.full_name|default:order.assigned_agent.user.email }}</div>{% endif %}
+        </li>
+        <li class="tl-step {% if order.status == 'out_for_delivery' or order.status == 'delivered' or order.status == 'failed' %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">Rider dispatched</span></li>
+        <li class="tl-step {% if order.status == 'delivered' %}done{% elif order.status == 'failed' %}done{% endif %}"><span class="tl-dot"></span><span class="tl-label">{% if order.status == 'failed' %}Delivery failed{% elif order.status == 'delivered' %}Delivered &amp; COD collected{% else %}Delivered &amp; COD collected{% endif %}</span></li>
+      </ul>
+      {% if order.status == 'cancelled' %}
+      <div class="notice-strip"><i class="ri-close-circle-line"></i> This order was cancelled.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="stack" style="gap:20px;">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">MONEY</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">COD Amount</span><span class="kv-val green mono">&#8358;{{ order.cod_amount|floatformat:2 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Delivery Fee</span><span class="kv-val mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:2 }}{% else %}Pending quote{% endif %}</span></div>
+        {% if order.settled_at %}
+        <div class="kv-row"><span class="kv-key">Settled</span><span class="kv-val green">{{ order.settled_at|date:"d M H:i" }}</span></div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">DELIVERY</span></div>
+      <div class="panel-body stack">
+        <div class="kv-row"><span class="kv-key">Customer</span><span class="kv-val">{{ order.customer_name }}</span></div>
+        <div class="kv-row"><span class="kv-key">Phone</span><span class="kv-val mono">{{ order.customer_phone }}</span></div>
+        <div class="kv-row"><span class="kv-key">Address</span><span class="kv-val">{{ order.customer_address|truncatechars:70 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Warehouse</span><span class="kv-val">{{ order.warehouse.name|default:"—" }}</span></div>
+        {% if order.delivery_instructions %}
+        <div class="kv-row"><span class="kv-key">Instructions</span><span class="kv-val">{{ order.delivery_instructions|truncatechars:60 }}</span></div>
+        {% endif %}
+        <a href="{% url 'tracking:detail' order.order_reference %}" class="btn btn-outline mt-8">Public Tracking <i class="ri-external-link-line"></i></a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+

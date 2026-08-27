@@ -1,0 +1,75 @@
+{% extends "base_dashboard.html" %}
+{% block topbar_title %}Wallet · {{ wallet_user.vendorprofile.business_name|default:wallet_user.email }}{% endblock %}
+{% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'vendor:manager_vendors' %}" class="mono text-green" style="font-size:0.68rem;"><i class="ri-arrow-left-line"></i> ALL VENDORS</a>
+    <h1 class="page-title mt-8">WALLET: {{ wallet_user.vendorprofile.business_name|default:wallet_user.email|upper }}</h1>
+  </div>
+  <a href="{% url 'vendor:manager_vendor_inventory' wallet_user.id %}" class="btn btn-outline">Inventory</a>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card"><span class="stat-label">BALANCE</span><span class="stat-value green">&#8358;{{ wallet.balance|floatformat:2 }}</span><i class="ri-wallet-3-line stat-icon"></i></div>
+  <div class="stat-card"><span class="stat-label">PENDING WITHDRAWALS</span><span class="stat-value">{{ withdrawals|length }}</span><i class="ri-bank-card-line stat-icon"></i></div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">LEDGER</span><span class="mono text-grey" style="font-size:0.62rem;">LAST 100</span></div>
+    {% if transactions %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>REF</th><th>TYPE</th><th>BY</th><th>AMOUNT</th><th>REASON</th><th>DATE</th></tr></thead>
+        <tbody>
+          {% for tx in transactions %}
+          <tr>
+            <td><span class="ref-code">{{ tx.transaction_ref }}</span></td>
+            <td>{{ tx.get_transaction_type_display }}</td>
+            <td style="font-size:0.78rem;color:var(--grey);">{{ tx.created_by.email|truncatechars:16|default:"system" }}</td>
+            <td class="mono {% if tx.transaction_type == 'credit' %}text-lime{% else %}text-red{% endif %}">{% if tx.transaction_type == 'credit' %}+{% else %}-{% endif %}&#8358;{{ tx.amount|floatformat:2 }}</td>
+            <td style="font-size:0.78rem;color:var(--grey);max-width:180px;word-break:break-word;">{{ tx.reason|default:"—" }}</td>
+            <td class="mono text-grey" style="font-size:0.68rem;">{{ tx.created_at|date:"d M H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="table-empty"><i class="ri-wallet-3-line"></i>No ledger entries.</div>
+    {% endif %}
+  </div>
+
+  <aside class="stack" style="gap:20px;">
+    {% if can_act %}
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">MANUAL DEDUCTION</span></div>
+      <form method="post" action="{% url 'vendor:manager_deduct_wallet' wallet_user.id %}" data-confirm="Deduct from this vendor's wallet? This is audited and requires a reason." class="panel-body stack">
+        {% csrf_token %}
+        {% include "partials/form_fields.html" with form=deduct_form %}
+        <button type="submit" class="btn btn-danger w-100"><i class="ri-indeterminate-circle-line"></i> Deduct Amount</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="notice-strip"><i class="ri-eye-line"></i> Read-only — only Managers can adjust wallets.</div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">WITHDRAWALS</span></div>
+      {% if withdrawals %}
+      <ul style="list-style:none;">
+        {% for w in withdrawals %}
+        <li style="display:flex;justify-content:space-between;padding:11px 20px;border-bottom:1px solid rgba(42,61,44,0.5);font-size:0.8rem;align-items:center;">
+          <span class="mono text-grey" style="font-size:0.66rem;">{{ w.requested_at|date:"d M" }}</span>
+          <span class="mono">&#8358;{{ w.amount_transferred|floatformat:0 }}</span>
+          <span class="status-badge st-{{ w.status }}">{{ w.get_status_display }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="table-empty" style="padding:26px;"><i class="ri-bank-card-line"></i>No withdrawal requests.</div>{% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
