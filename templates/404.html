@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found | Falcon</title>
+  <meta name="robots" content="noindex" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0c120d;--panel:#111a13;--border:#1e2d22;--lime:#d6f36b;--green:#3ddc84;
+      --grey:#8aa08d;--text:#e8f2e9;--gold:#f0b429;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Bebas Neue',sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .card{max-width:520px;width:100%;text-align:center;padding:48px 36px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,var(--panel),var(--bg));}
+    .code{font-family:var(--mono);font-size:clamp(4rem,14vw,6.5rem);line-height:1;color:var(--lime);text-shadow:0 0 40px rgba(214,243,107,.25);}
+    .label{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:.72rem;letter-spacing:.25em;color:var(--grey);text-transform:uppercase;}
+    h1{font-family:var(--display);font-size:1.7rem;letter-spacing:.06em;margin-top:18px;color:var(--text);}
+    p{color:var(--grey);font-size:.95rem;line-height:1.6;margin-top:12px;}
+    .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px;}
+    a.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:.9rem;transition:.2s;}
+    a.btn-primary{background:var(--lime);color:#0c120d;}
+    a.btn-primary:hover{background:#e4fb8f;}
+    a.btn-ghost{border:1px solid var(--border);color:var(--text);}
+    a.btn-ghost:hover{border-color:var(--green);color:var(--green);}
+    .mono-note{margin-top:26px;font-family:var(--mono);font-size:.62rem;color:var(--grey);letter-spacing:.08em;}
+    @media(max-width:480px){.card{padding:36px 20px;}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="code">404</div>
+    <span class="label">Page Not Found</span>
+    <h1>This route leads nowhere.</h1>
+    <p>The page you were looking for has moved, was removed, or never existed. Double-check the address or head back home.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="/">&larr; Go to Home</a>
+      <a class="btn btn-ghost" href="/track/">Track an Item</a>
+    </div>
+    <div class="mono-note">FALCON DELIVERY SERVICE &bull; FAST &bull; SECURE &bull; RELIABLE</div>
+  </div>
+</body>
+</html>

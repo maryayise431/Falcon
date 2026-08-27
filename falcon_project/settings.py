@@ -31,14 +31,30 @@ def env_int(key, default=0):
 
 def env_list(key, default=None):
     raw = os.environ.get(key)
-    if raw is None:
+    if raw is None or raw.strip() == "":
         return list(default or [])
-    return [item.strip() for item in shlex.split(raw) if item.strip()]
+    values = shlex.split(raw)
+    if not values:
+        values = raw.split(",")
+    return [item.strip() for item in ",".join(values).split(",") if item.strip()]
 
 
 SECRET_KEY = env_str("SECRET_KEY", "django-insecure-dev-key")
 DEBUG = env_bool("DEBUG", True)
-ALLOWED_HOSTS = ["*"]
+
+# Hosts the site will serve. Provide via the ALLOWED_HOSTS env var
+# (comma- or space-separated). In DEBUG we fall back to "*" for convenience.
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", ["*"] if DEBUG else [])
+
+# Origins that may submit unsafe (POST) requests to this site, e.g.
+# https://example.onrender.com. Provide via the CSRF_TRUSTED_ORIGINS env var
+# (comma- or space-separated). When not set, it is derived from ALLOWED_HOSTS.
+_csrf_defaults = []
+for _h in env_list("ALLOWED_HOSTS", ["localhost", "127.0.0.1"]):
+    if _h != "*":
+        _csrf_defaults.append(f"https://{_h}")
+        _csrf_defaults.append(f"http://{_h}")
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", _csrf_defaults)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -191,3 +207,15 @@ MESSAGE_TAGS = {
     "warning": "warning",
     "error": "error",
 }
+
+# Render serves the app behind an HTTPS proxy — trust the X-Forwarded-Proto
+# header so request.is_secure() and secure cookies work correctly.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Production security hardening (only when DEBUG is off).
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
