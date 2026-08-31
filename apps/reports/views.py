@@ -143,12 +143,13 @@ class VendorFulfillmentReportView(ManagerOrSubManagerMixin, CSVExportMixin, Base
 
     def csv_payload(self, ctx):
         return (
-            ["reference", "vendor", "cod_amount", "delivery_fee", "status", "created_at"],
+            ["reference", "vendor", "cod_amount", "agent_delivery_fee", "vendor_delivery_fee", "status", "created_at"],
             [
                 [
                     o.order_reference,
                     o.vendor.email,
                     str(o.cod_amount),
+                    str(o.agent_delivery_fee or ""),
                     str(o.delivery_fee or ""),
                     o.status,
                     o.created_at.isoformat(),
@@ -247,12 +248,15 @@ def dated_csv_payload(rows):
 
 def revenue_component_marketplace(start, end):
     from django.db.models import F
+    from django.db.models.functions import Coalesce
 
     return (
         MarketplaceOrderItem.objects.filter(
             order__created_at__range=(start, end),
             order__payment__status="success",
-        ).aggregate(total=Sum(F("unit_price") * F("quantity")))["total"]
+        ).aggregate(
+            total=Sum(Coalesce(F("line_total"), F("unit_price") * F("quantity")))
+        )["total"]
     ) or 0
 
 

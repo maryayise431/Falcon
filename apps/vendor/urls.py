@@ -10,6 +10,7 @@ urlpatterns = [
     path("dashboard/", views.VendorDashboardView.as_view(), name="dashboard"),
     path("inventory/", views.VendorProductListView.as_view(), name="inventory"),
     path("inventory/add/", views.VendorProductCreateView.as_view(), name="inventory_add"),
+    path("inventory/<int:pk>/edit/", views.VendorProductEditView.as_view(), name="inventory_edit"),
     path("orders/", views.VendorOrderListView.as_view(), name="orders"),
     path("orders/create/", views.VendorOrderCreateView.as_view(), name="order_create"),
     path("orders/<str:ref>/", views.VendorOrderDetailView.as_view(), name="order_detail"),

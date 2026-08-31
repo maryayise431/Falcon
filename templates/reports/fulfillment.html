@@ -31,13 +31,14 @@
   {% if orders %}
   <div class="table-scroll">
     <table class="data-table">
-      <thead><tr><th>REF</th><th>VENDOR</th><th>COD</th><th>FEE</th><th>STATUS</th><th>DATE</th></tr></thead>
+      <thead><tr><th>REF</th><th>VENDOR</th><th>COD</th><th>AGENT FEE</th><th>VENDOR FEE</th><th>STATUS</th><th>DATE</th></tr></thead>
       <tbody>
         {% for order in orders %}
         <tr>
           <td><a href="{% url 'vendor:manager_vendor_order_detail' order.order_reference %}" class="ref-code">{{ order.order_reference }}</a></td>
           <td>{{ order.vendor.vendorprofile.business_name|default:order.vendor.email|truncatechars:18 }}</td>
           <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
+          <td class="mono">{% if order.agent_delivery_fee is not None %}&#8358;{{ order.agent_delivery_fee|floatformat:0 }}{% else %}—{% endif %}</td>
           <td class="mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:0 }}{% else %}—{% endif %}</td>
           <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
           <td class="mono text-grey" style="font-size:0.68rem;">{{ order.created_at|date:"d M H:i" }}</td>

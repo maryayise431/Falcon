@@ -25,16 +25,17 @@
   {% if products %}
   <div class="table-scroll">
     <table class="data-table">
-      <thead><tr><th>ITEM</th><th>PRICE</th><th>WAREHOUSE</th><th>RECEIVED / TOTAL</th><th>STATE</th><th>REGISTERED</th></tr></thead>
+<thead><tr><th>ITEM</th><th>PRICE</th><th>WAREHOUSE</th><th>RECEIVED / TOTAL</th><th>STATE</th><th>REGISTERED</th><th></th></tr></thead>
       <tbody>
         {% for product in products %}
         <tr>
           <td style="font-weight:600;color:var(--white);">{{ product.name }}</td>
-          <td class="mono">{{ product.price|floatformat:2 }}</td>
+          <td class="mono">&#8358;{{ product.price|floatformat:2 }}</td>
           <td>{{ product.warehouse.name|default:"Pending allocation" }}</td>
           <td class="mono">{{ product.quantity_received }} / {{ product.quantity_total }}</td>
           <td><span class="status-badge st-{{ product.status }}">{{ product.get_status_display }}</span></td>
           <td>{{ product.created_at|date:"M d, Y" }}</td>
+          <td><a href="{% url 'vendor:inventory_edit' product.pk %}" class="btn btn-outline btn-sm">Edit <i class="ri-pencil-line"></i></a></td>
         </tr>
         {% endfor %}
       </tbody>

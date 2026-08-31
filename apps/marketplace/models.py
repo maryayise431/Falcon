@@ -157,12 +157,18 @@ class MarketplaceOrderItem(models.Model):
     product_name = models.CharField(max_length=180)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    line_total = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text="Exact line subtotal when quantity pricing applies (else unit_price x quantity).",
+    )
 
     def __str__(self):
         return f"{self.quantity} x {self.product_name}"
 
     @property
     def subtotal(self):
+        if self.line_total is not None:
+            return self.line_total
         return self.unit_price * self.quantity
 
 

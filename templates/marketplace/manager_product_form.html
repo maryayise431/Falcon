@@ -1,6 +1,7 @@
 {% extends "base_dashboard.html" %}
-{% block topbar_title %}{% if product %}Edit Product{% else %}New Product{% endif %}{% endblock %}
+{% load static %}{% block topbar_title %}{% if product %}Edit Product{% else %}New Product{% endif %}{% endblock %}
 {% block sidebar_nav %}{% include "partials/sidebar_manager.html" %}{% endblock %}
+{% block extra_js %}<script src="{% static 'js/qty_pricing.js' %}"></script>{% endblock %}
 
 {% block dash_content %}
 <div class="page-header">
@@ -26,6 +27,33 @@
       </div>
       {% endif %}
     </div>
+
+    <div class="qty-pricing">
+      <div class="qty-title">Quantity Pricing <span class="qty-hint">Optional — set a flat total price for exact quantities. Quantities without a rule use base price &times; quantity.</span></div>
+      <div class="qp-base">
+        <input class="qp-qty" type="number" value="1" readonly tabindex="-1" aria-label="Quantity 1" />
+        <span class="qp-x">&rarr;</span>
+        <input class="qp-price" type="number" value="{% if form.price.value %}{{ form.price.value }}{% else %}0{% endif %}" disabled tabindex="-1" aria-label="Base price (quantity 1)" />
+        <span class="qty-hint">base price for 1 unit</span>
+      </div>
+      <div id="qpRows">
+        {% for rule in product.quantity_prices.all %}
+        {% if rule.quantity > 1 %}
+        <div class="qp-row" data-qty="{{ rule.quantity }}">
+          <input class="qp-qty" name="qp_qty" type="number" value="{{ rule.quantity }}" readonly tabindex="-1" aria-label="Quantity {{ rule.quantity }}" />
+          <span class="qp-x">&rarr;</span>
+          <input class="qp-price" name="qp_price" type="number" min="0" step="0.01" placeholder="Flat price" value="{{ rule.price }}">
+          <button type="button" class="btn btn-ghost btn-sm qp-del" tabindex="-1" aria-label="Remove row">&times;</button>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div class="qty-actions">
+        <button type="button" id="qpAdd" class="btn btn-outline btn-sm"><i class="ri-add-line"></i> Add quantity price</button>
+        <span class="qty-hint">e.g. Qty <b>2</b> &rarr; price <b>&#8358;5,000</b> means 2 units cost &#8358;5,000 flat (not 2 &times; unit price).</span>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-solid">{% if product %}Save Changes{% else %}Create Product{% endif %} <i class="ri-check-line"></i></button>
   </form>
 </div>

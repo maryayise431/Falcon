@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.utils.timezone import localdate
 from django.views.generic import TemplateView
@@ -73,7 +74,9 @@ def revenue_breakdown(start, end):
         MarketplaceOrderItem.objects.filter(
             order__created_at__range=(start, end),
             order__payment__status="success",
-        ).aggregate(total=Sum(F("unit_price") * F("quantity")))["total"]
+        ).aggregate(
+            total=Sum(Coalesce(F("line_total"), F("unit_price") * F("quantity")))
+        )["total"]
     ) or 0
     delivery_fees = (
         VendorWalletTransaction.objects.filter(

@@ -16,6 +16,7 @@ from django.views.generic import DetailView, FormView, ListView, TemplateView, V
 from apps.accounts.views import role_home
 from apps.audit.services import log_action
 from apps.core.mixins import CustomerRequiredMixin, ManagerRequiredMixin
+from apps.core.models import save_quantity_prices
 from apps.core.paystack import (
     PaystackError,
     initialize_transaction,
@@ -391,6 +392,11 @@ class ManagerProductCreateView(ManagerRequiredMixin, FormView):
             product = form.save(commit=False)
             product.created_by = request.user
             product.save()
+            save_quantity_prices(
+                product,
+                request.POST.getlist("qp_qty"),
+                request.POST.getlist("qp_price"),
+            )
             for f in files[:8]:
                 img = ProductImage.objects.create(image=f, alt=product.name)
                 product.images.add(img)
@@ -428,7 +434,9 @@ class ManagerProductUpdateView(ManagerRequiredMixin, View):
     template_name = "marketplace/manager_product_form.html"
 
     def get(self, request, pk):
-        product = get_object_or_404(MarketplaceProduct, pk=pk)
+        product = get_object_or_404(
+            MarketplaceProduct.objects.prefetch_related("quantity_prices"), pk=pk
+        )
         form = MarketplaceProductForm(instance=product)
         return render(
             request, self.template_name, {"form": form, "product": product}
@@ -442,6 +450,11 @@ class ManagerProductUpdateView(ManagerRequiredMixin, View):
         if form.is_valid():
             product = form.save(commit=False)
             product.save()
+            save_quantity_prices(
+                product,
+                request.POST.getlist("qp_qty"),
+                request.POST.getlist("qp_price"),
+            )
             for f in files[:8]:
                 img = ProductImage.objects.create(image=f, alt=product.name)
                 product.images.add(img)
@@ -623,7 +636,7 @@ class ManagerSetDeliveryFeeView(ManagerRequiredMixin, View):
         order.delivery_fee = fee
         order.delivery_fee_set_at = timezone.now()
         order.total_amount = order.items.aggregate(
-            total=dm.Sum(dm.F("unit_price") * dm.F("quantity"))
+            total=dm.Sum(dm.Coalesce(dm.F("line_total"), dm.F("unit_price") * dm.F("quantity")))
         )["total"] + fee
         order.save(update_fields=["delivery_fee", "delivery_fee_set_at", "total_amount", "updated_at"])
         log_action(

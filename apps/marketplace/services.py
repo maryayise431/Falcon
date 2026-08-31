@@ -1,6 +1,8 @@
 from django.db import transaction as db_transaction
 from django.utils import timezone
 
+from apps.core.models import effective_unit_price, line_total
+
 from .models import MarketplaceOrder, MarketplaceOrderItem, MarketplacePayment, MarketplaceProduct
 
 CART_SESSION_KEY = "falcon_cart"
@@ -57,8 +59,14 @@ def build_cart_context(session):
         if qty == 0:
             stale_ids.append(key)
             continue
-        subtotal = product.price * qty
-        entries.append({"product": product, "quantity": qty, "subtotal": subtotal})
+        subtotal = line_total(product, qty)
+        entries.append({
+            "product": product,
+            "quantity": qty,
+            "subtotal": subtotal,
+            "line_price": subtotal,
+            "unit_price": effective_unit_price(product, qty),
+        })
         total += subtotal
     for key in stale_ids:
         cart.pop(key, None)
@@ -90,7 +98,8 @@ def place_order(customer, cart_data, delivery_address="", receiver_phone="",
             product=entry["product"],
             product_name=entry["product"].name,
             quantity=entry["quantity"],
-            unit_price=entry["product"].price,
+            unit_price=entry["unit_price"],
+            line_total=entry["line_price"],
         )
     payment = MarketplacePayment.objects.create(order=order, amount=product_total)
     return order, payment

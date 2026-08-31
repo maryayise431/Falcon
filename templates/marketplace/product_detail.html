@@ -20,6 +20,16 @@
       <span class="pm-cat mono">{{ product.category.name|default:"GENERAL" }}</span>
       <h1 class="display-md mt-8">{{ product.name }}</h1>
       <p class="stat-value green mt-16">&#8358;{{ product.price|floatformat:2 }}</p>
+      {% with qp=product.quantity_prices.all %}
+      {% if qp %}
+      <div class="bulk-box">
+        <div class="bulk-title"><i class="ri-stack-line"></i> BULK PRICING</div>
+        {% for rule in qp %}
+        <div class="bulk-row"><span class="bulk-qty">{{ rule.quantity }} units</span><span class="mono bulk-price">&#8358;{{ rule.price|floatformat:2 }}</span><span class="bulk-note">flat total</span></div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
       <p class="page-sub mt-16">{{ product.description|linebreaksbr }}</p>
 
       <div class="kv-grid mt-24">
@@ -28,7 +38,7 @@
         </div>
       </div>
 
-      <form method="post" action="{% url 'marketplace:cart' %}" class="flex mt-24">
+      <form method="post" action="{% url 'marketplace:cart' %}" class="flex mt-24 pdp-add-form">
         {% csrf_token %}
         <input type="hidden" name="action" value="add" />
         <input type="hidden" name="product_id" value="{{ product.id }}" />

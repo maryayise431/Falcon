@@ -104,6 +104,10 @@ class VendorFulfillmentOrder(models.Model):
     delivery_fee = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
     )
+    # Fee earned by the delivery agent (separate from the vendor's delivery fee).
+    agent_delivery_fee = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+    )
     delivery_instructions = models.TextField(blank=True)
 
     status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_PENDING)
@@ -132,6 +136,10 @@ class VendorFulfillmentOrder(models.Model):
         if self.delivery_fee is not None:
             return self.cod_amount - self.delivery_fee
         return None
+
+    @property
+    def agent_fee(self):
+        return self.agent_delivery_fee if self.agent_delivery_fee is not None else self.delivery_fee
 
     def save(self, *args, **kwargs):
         if not self.order_reference:

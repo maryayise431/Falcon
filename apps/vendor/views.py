@@ -23,6 +23,7 @@ from apps.core.mixins import (
     RoleRequiredMixin,
     VendorRequiredMixin,
 )
+from apps.core.models import line_total, save_quantity_prices
 from apps.accounts.models import DeliveryAgentProfile
 from apps.delivery.models import DeliveryAssignment
 
@@ -122,6 +123,11 @@ class VendorProductCreateView(VendorRequiredMixin, FormView):
         product = form.save(commit=False)
         product.vendor = self.request.user
         product.save()
+        save_quantity_prices(
+            product,
+            self.request.POST.getlist("qp_qty"),
+            self.request.POST.getlist("qp_price"),
+        )
         log_action(
             self.request,
             "product_created",
@@ -133,6 +139,40 @@ class VendorProductCreateView(VendorRequiredMixin, FormView):
             f"'{product.name}' registered. Falcon will confirm receipt at the warehouse.",
         )
         return redirect(self.success_url)
+
+
+class VendorProductEditView(VendorRequiredMixin, View):
+    template_name = "vendor/inventory_form.html"
+
+    def get_queryset(self):
+        return VendorProduct.objects.filter(vendor=self.request.user).prefetch_related(
+            "quantity_prices"
+        )
+
+    def get(self, request, pk):
+        product = get_object_or_404(self.get_queryset(), pk=pk)
+        form = VendorProductForm(instance=product)
+        return render(request, self.template_name, {"form": form, "product": product})
+
+    def post(self, request, pk):
+        product = get_object_or_404(self.get_queryset(), pk=pk)
+        form = VendorProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            product = form.save()
+            save_quantity_prices(
+                product,
+                request.POST.getlist("qp_qty"),
+                request.POST.getlist("qp_price"),
+            )
+            log_action(
+                request,
+                "product_updated",
+                product,
+                description=f"Vendor updated '{product.name}' pricing",
+            )
+            messages.success(request, f"'{product.name}' updated.")
+            return redirect("vendor:inventory")
+        return render(request, self.template_name, {"form": form, "product": product})
 
 
 class VendorOrderListView(VendorRequiredMixin, ListView):
@@ -189,7 +229,7 @@ class VendorOrderCreateView(VendorRequiredMixin, FormView):
             customer_address=form.cleaned_data["customer_address"],
             customer_address_lat=form.cleaned_data.get("customer_address_lat") or None,
             customer_address_lng=form.cleaned_data.get("customer_address_lng") or None,
-            cod_amount=product.price * quantity,
+            cod_amount=line_total(product, quantity),
             delivery_instructions=form.cleaned_data.get("delivery_instructions", ""),
         )
         deduct_order_stock(order)
@@ -667,7 +707,10 @@ class ManagerVendorOrderDetailView(ReadOnlySubManagerMixin, DetailView):
             user__is_active=True
         )
         ctx["fee_form"] = ManagerDeliveryFeeForm(
-            initial={"delivery_fee": order.delivery_fee}
+            initial={
+                "delivery_fee": order.delivery_fee,
+                "agent_delivery_fee": order.agent_delivery_fee,
+            }
         )
         ctx["is_manager"] = self.request.user.role == FalconUser.ROLE_MANAGER
         ctx["assignment"] = DeliveryAssignment.objects.filter(order=order).first()
@@ -699,20 +742,28 @@ class ManagerApproveOrderView(ManagerRequiredMixin, View):
         order = get_object_or_404(VendorFulfillmentOrder, order_reference=ref)
         form = ManagerDeliveryFeeForm(request.POST)
         if not form.is_valid():
-            messages.error(request, "; ".join(form.errors.get("delivery_fee", ["Invalid fee."])))
+            messages.error(request, "; ".join(
+                msg for errors in form.errors.values() for msg in errors
+            ))
             return redirect("vendor:manager_vendor_order_detail", ref=ref)
         fee = form.cleaned_data["delivery_fee"]
-        previous = {"status": order.status, "delivery_fee": str(order.delivery_fee)}
+        agent_fee = form.cleaned_data.get("agent_delivery_fee")
+        previous = {
+            "status": order.status,
+            "delivery_fee": str(order.delivery_fee),
+            "agent_delivery_fee": str(order.agent_delivery_fee),
+        }
         try:
             if order.status != VendorFulfillmentOrder.STATUS_PROCESSING:
                 raise ValueError(f"Cannot approve an order in '{order.status}' state.")
             order.delivery_fee = fee
+            order.agent_delivery_fee = agent_fee
             order.approved_by = request.user
             order.approved_at = timezone.now()
             if order.product and order.product.assigned_agent:
                 order.assigned_agent = order.product.assigned_agent
                 order.status = VendorFulfillmentOrder.STATUS_APPROVED
-                order.save(update_fields=["delivery_fee", "approved_by", "approved_at", "status", "assigned_agent", "updated_at"])
+                order.save(update_fields=["delivery_fee", "agent_delivery_fee", "approved_by", "approved_at", "status", "assigned_agent", "updated_at"])
                 DeliveryAssignment.objects.get_or_create(
                     order=order,
                     defaults={
@@ -723,7 +774,7 @@ class ManagerApproveOrderView(ManagerRequiredMixin, View):
                 )
             else:
                 order.status = VendorFulfillmentOrder.STATUS_AWAITING_ASSIGNMENT
-                order.save(update_fields=["delivery_fee", "approved_by", "approved_at", "status", "updated_at"])
+                order.save(update_fields=["delivery_fee", "agent_delivery_fee", "approved_by", "approved_at", "status", "updated_at"])
         except ValueError as exc:
             messages.error(request, str(exc))
             return redirect("vendor:manager_vendor_order_detail", ref=ref)
@@ -731,14 +782,14 @@ class ManagerApproveOrderView(ManagerRequiredMixin, View):
             request,
             "order_approved",
             order,
-            description=f"Approved with delivery fee \u20a6{fee}",
+            description=f"Approved with vendor delivery fee \u20a6{fee} and agent fee \u20a6{agent_fee or 0}",
             previous_value=previous,
-            new_value={"status": order.status, "delivery_fee": str(fee)},
+            new_value={"status": order.status, "delivery_fee": str(fee), "agent_delivery_fee": str(agent_fee or "")},
         )
         if order.assigned_agent:
-            messages.success(request, f"Order approved and auto-assigned to {order.assigned_agent.full_name}. Delivery fee \u20a6{fee}.")
+            messages.success(request, f"Order approved and auto-assigned to {order.assigned_agent.full_name}. Vendor fee \u20a6{fee}, Agent fee \u20a6{agent_fee or 0}.")
         else:
-            messages.success(request, f"Order approved. Delivery fee set to \u20a6{fee}. Assign an agent manually.")
+            messages.success(request, f"Order approved. Vendor fee \u20a6{fee}, Agent fee \u20a6{agent_fee or 0}. Assign an agent manually.")
         return redirect("vendor:manager_vendor_order_detail", ref=ref)
 
 
@@ -869,7 +920,7 @@ class ManagerCreateVendorOrderView(ManagerRequiredMixin, FormView):
             customer_address=form.cleaned_data["customer_address"],
             customer_address_lat=form.cleaned_data.get("customer_address_lat") or None,
             customer_address_lng=form.cleaned_data.get("customer_address_lng") or None,
-            cod_amount=product.price * quantity,
+            cod_amount=line_total(product, quantity),
             delivery_instructions=form.cleaned_data.get("delivery_instructions", ""),
             created_by_manager=True,
             status=VendorFulfillmentOrder.STATUS_PROCESSING,

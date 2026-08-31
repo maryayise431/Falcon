@@ -18,7 +18,7 @@
               <td>
                 <a href="{% url 'marketplace:product_detail' entry.product.slug %}" style="color:var(--white);font-weight:600;">{{ entry.product.name }}</a>
               </td>
-              <td class="mono">&#8358;{{ entry.product.price|floatformat:2 }}</td>
+              <td class="mono">&#8358;{{ entry.unit_price|floatformat:2 }}<br /><span class="text-grey" style="font-size:0.6rem;">each</span></td>
               <td>
                 <form method="post" action="{% url 'marketplace:cart' %}" class="flex" style="gap:6px;">
                   {% csrf_token %}
@@ -42,7 +42,7 @@
           </tbody>
         </table>
       </div>
-      <div class="panel-head">
+      <div class="panel-head cart-footer">
         <form method="post" action="{% url 'marketplace:cart' %}" data-confirm="Empty your entire cart?">
           {% csrf_token %}
           <input type="hidden" name="action" value="clear" />

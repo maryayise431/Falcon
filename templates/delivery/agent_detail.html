@@ -91,6 +91,7 @@
         <div class="kv-row"><span class="kv-key">Address</span><span class="kv-val">{{ assignment.order.customer_address|linebreaksbr|striptags }}</span></div>
         <div class="kv-row"><span class="kv-key">Item</span><span class="kv-val">{{ assignment.order.product_name }} &times; {{ assignment.order.quantity }}</span></div>
         <div class="kv-row"><span class="kv-key">Collect COD</span><span class="kv-val green mono">&#8358;{{ assignment.order.cod_amount|floatformat:2 }}</span></div>
+        <div class="kv-row"><span class="kv-key">Your Fee</span><span class="kv-val lime mono">{% if assignment.order.agent_fee is not None %}&#8358;{{ assignment.order.agent_fee|floatformat:2 }}{% else %}—{% endif %}</span></div>
         {% if assignment.order.delivery_instructions %}
         <div class="kv-row"><span class="kv-key">Instructions</span><span class="kv-val">{{ assignment.order.delivery_instructions }}</span></div>
         {% endif %}

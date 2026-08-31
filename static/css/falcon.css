@@ -3106,3 +3106,126 @@ body.light-mode .img-placeholder { color: var(--border); }
 @media (max-width: 420px) {
   .product-preview-grid { grid-template-columns: 1fr; }
 }
+
+/* Quantity pricing rules */
+.qty-pricing {
+  border: 1px dashed var(--border, #2a2f35);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--bg, #12151a);
+}
+.qty-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+.qty-hint {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--muted, #8b93a1);
+}
+.qty-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.qp-row,
+.qp-base {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.qp-base {
+  opacity: 0.9;
+}
+.qp-qty,
+.qp-price {
+  flex: 1;
+  min-width: 0;
+}
+.qp-qty {
+  max-width: 74px;
+  text-align: center;
+  font-family: var(--font-mono, monospace);
+  background: transparent;
+  color: var(--muted, #8b93a1);
+  border: 1px dashed var(--border, #2a2f35);
+}
+.qp-price {
+  max-width: 160px;
+}
+.qp-x {
+  color: var(--muted, #8b93a1);
+}
+.qp-del {
+  flex-shrink: 0;
+}
+@media (max-width: 520px) {
+  .qp-qty { max-width: 58px; }
+  .qp-price { max-width: none; flex: 1.6; }
+  .qty-hint { display: block; width: 100%; }
+}
+
+/* Bulk pricing display */
+.bulk-box {
+  margin-top: 12px;
+  border: 1px solid var(--border, #2a2f35);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--bg, #12151a);
+}
+.bulk-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--accent, #c8f56c);
+  margin-bottom: 8px;
+}
+.bulk-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  padding: 4px 0;
+}
+.bulk-qty {
+  font-weight: 600;
+}
+.bulk-price {
+  color: var(--accent, #c8f56c);
+}
+.bulk-note {
+  color: var(--muted, #8b93a1);
+  font-size: 0.72rem;
+  margin-left: auto;
+}
+
+/* ── RESPONSIVE POLISH FOR MODIFIED PAGES ── */
+@media (max-width: 640px) {
+  .bulk-box { padding: 10px 12px; }
+  .bulk-row { font-size: 0.78rem; gap: 8px; }
+  .bulk-note { font-size: 0.66rem; }
+  .product-detail-qty {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .pdp-add-form { flex-wrap: wrap; }
+  .pdp-add-form .form-input { flex: 1 1 90px; }
+}
+@media (max-width: 480px) {
+  .panel-head { flex-direction: column; align-items: stretch; gap: 10px; }
+  .panel-head .flex,
+  .page-header .flex,
+  .flex-between { flex-wrap: wrap; }
+  .cart-footer { flex-direction: column; align-items: stretch; }
+  .cart-footer .btn,
+  .cart-footer a.btn { width: 100%; }
+  .cart-footer .flex { justify-content: space-between; }
+}

@@ -97,6 +97,21 @@ class WalletSettlementTests(TestCase):
         wallet.refresh_from_db()
         self.assertEqual(wallet.balance, Decimal("3800"))
 
+    def test_agent_fee_not_deducted_from_vendor_wallet(self):
+        order = make_vendor_order(self.vendor, cod="20000.00", fee="2500.00")
+        order.agent_delivery_fee = Decimal("1000.00")
+        order.save()
+        self.assertEqual(order.agent_fee, Decimal("1000.00"))
+        self.assertEqual(order.net_to_vendor, Decimal("17500"))
+        wallet = get_or_create_wallet(self.vendor)
+        settle_cod_delivery(order, Decimal("20000"))
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.balance, Decimal("17500"))  # only vendor fee deducted
+
+    def test_agent_fee_falls_back_to_vendor_fee(self):
+        order = make_vendor_order(self.vendor, cod="10000.00", fee="1500.00")
+        self.assertEqual(order.agent_fee, Decimal("1500.00"))
+
     def test_debit_beyond_balance_raises(self):
         wallet = get_or_create_wallet(self.vendor)
         with self.assertRaises(ValueError):
@@ -265,6 +280,27 @@ class VendorProfilePageTests(TestCase):
             c = Client(); c.force_login(u)
             r = c.get(reverse("vendor:profile"))
             self.assertEqual(r.status_code, 403)
+
+
+class VendorQuantityPricingTests(TestCase):
+    def setUp(self):
+        self.vendor = make_user("qv@falcon.test", FalconUser.ROLE_VENDOR)
+        from apps.vendor.models import VendorProduct
+
+        self.product = VendorProduct.objects.create(
+            vendor=self.vendor,
+            name="Bulk Fabric",
+            price=Decimal("2000.00"),
+            quantity_available=50,
+            status=VendorProduct.STATUS_RECEIVED,
+        )
+
+    def test_line_total_uses_custom_price(self):
+        from apps.core.models import QuantityPrice, line_total
+
+        self.product.quantity_prices.create(quantity=5, price=Decimal("9000.00"))
+        self.assertEqual(line_total(self.product, 5), Decimal("9000.00"))
+        self.assertEqual(line_total(self.product, 4), Decimal("8000.00"))
 
 
 class PlanRouteAliasesTests(TestCase):

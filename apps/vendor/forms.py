@@ -113,12 +113,22 @@ class WithdrawalForm(StyledFormMixin, forms.Form):
 
 
 class ManagerDeliveryFeeForm(StyledFormMixin, forms.Form):
-    delivery_fee = forms.DecimalField(max_digits=12, decimal_places=2)
+    delivery_fee = forms.DecimalField(max_digits=12, decimal_places=2, label="Vendor Delivery Fee")
+    agent_delivery_fee = forms.DecimalField(
+        max_digits=12, decimal_places=2, required=False,
+        label="Delivery Agent Fee",
+    )
 
     def clean_delivery_fee(self):
         fee = self.cleaned_data["delivery_fee"]
         if fee < 0:
             raise forms.ValidationError("Delivery fee cannot be negative.")
+        return fee
+
+    def clean_agent_delivery_fee(self):
+        fee = self.cleaned_data["agent_delivery_fee"]
+        if fee is not None and fee < 0:
+            raise forms.ValidationError("Agent fee cannot be negative.")
         return fee
 
 

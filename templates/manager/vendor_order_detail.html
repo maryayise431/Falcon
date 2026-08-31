@@ -109,7 +109,8 @@
       <div class="panel-head"><span class="panel-title">MONEY</span></div>
       <div class="panel-body stack">
         <div class="kv-row"><span class="kv-key">COD Amount</span><span class="kv-val green mono">&#8358;{{ order.cod_amount|floatformat:2 }}</span></div>
-        <div class="kv-row"><span class="kv-key">Delivery Fee</span><span class="kv-val mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:2 }}{% else %}Not set{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Agent Delivery Fee</span><span class="kv-val mono">{% if order.agent_fee is not None %}&#8358;{{ order.agent_fee|floatformat:2 }}{% else %}Not set{% endif %}</span></div>
+        <div class="kv-row"><span class="kv-key">Vendor Delivery Fee</span><span class="kv-val mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:2 }}{% else %}Not set{% endif %}</span></div>
         <div class="kv-row"><span class="kv-key">Vendor Receives</span><span class="kv-val mono">{% if order.delivery_fee is not None %}&#8358;{{ order.net_to_vendor|floatformat:2|default:"—" }}{% else %}—{% endif %}</span></div>
         <div class="kv-row"><span class="kv-key">Approved By</span><span class="kv-val">{{ order.approved_by.email|default:"—"|truncatechars:20 }}</span></div>
       </div>

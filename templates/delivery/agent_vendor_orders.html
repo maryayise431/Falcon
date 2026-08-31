@@ -11,7 +11,7 @@
   {% if orders %}
   <div class="table-scroll">
     <table class="data-table">
-      <thead><tr><th>REF</th><th>CUSTOMER</th><th>PRODUCT</th><th>COD</th><th>FEE</th><th>NET</th><th>STATUS</th></tr></thead>
+      <thead><tr><th>REF</th><th>CUSTOMER</th><th>PRODUCT</th><th>COD</th><th>YOUR FEE</th><th>STATUS</th></tr></thead>
       <tbody>
         {% for order in orders %}
         <tr>
@@ -19,8 +19,7 @@
           <td>{{ order.customer_name|truncatechars:18 }}</td>
           <td>{{ order.product.name|truncatechars:20 }}</td>
           <td class="mono">&#8358;{{ order.cod_amount|floatformat:0 }}</td>
-          <td class="mono">{% if order.delivery_fee is not None %}&#8358;{{ order.delivery_fee|floatformat:0 }}{% else %}—{% endif %}</td>
-          <td class="mono {% if order.net_to_vendor %}text-lime{% endif %}">{% if order.net_to_vendor is not None %}&#8358;{{ order.net_to_vendor|floatformat:0 }}{% else %}—{% endif %}</td>
+          <td class="mono text-lime">{% if order.agent_fee is not None %}&#8358;{{ order.agent_fee|floatformat:0 }}{% else %}—{% endif %}</td>
           <td><span class="status-badge st-{{ order.status }}">{{ order.get_status_display }}</span></td>
         </tr>
         {% endfor %}

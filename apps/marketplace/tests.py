@@ -127,6 +127,81 @@ class CartFlowTests(TestCase):
         self.assertIsNotNone(payment)
 
 
+class QuantityPricingTests(TestCase):
+    def _add_rule(self, product, qty, price):
+        from apps.core.models import QuantityPrice
+        return QuantityPrice.objects.create(
+            marketplace_product=product, quantity=qty, price=Decimal(price)
+        )
+
+    def test_custom_price_used_in_cart_and_order(self):
+        p = make_product(price="1000.00", stock=20)
+        self._add_rule(p, 3, "2500.00")  # 3 units cost 2500 flat
+        session = self.client.session
+        add_to_cart(session, str(p.pk), 3)
+        cart = build_cart_context(session)
+        self.assertEqual(cart["total"], Decimal("2500"))
+        self.assertEqual(cart["entries"][0]["unit_price"], Decimal("2500") / 3)
+
+        buyer = make_user("buyer2@falcon.test", email_verified=True)
+        order, _ = place_order(
+            customer=buyer,
+            cart_data=cart,
+            delivery_address="1 Test Street",
+            receiver_phone="08000000000",
+        )
+        self.assertEqual(order.total_amount, Decimal("2500"))
+        item = order.items.get()
+        self.assertEqual(item.unit_price, Decimal("833.33"))
+        self.assertEqual(item.line_total, Decimal("2500"))
+        self.assertEqual(item.subtotal, Decimal("2500"))
+
+    def test_no_custom_price_falls_back_to_base(self):
+        p = make_product(price="1000.00", stock=20)
+        self._add_rule(p, 3, "2500.00")
+        session = self.client.session
+        add_to_cart(session, str(p.pk), 2)  # no rule for 2
+        cart = build_cart_context(session)
+        self.assertEqual(cart["total"], Decimal("2000"))
+        self.assertEqual(cart["entries"][0]["unit_price"], Decimal("1000"))
+
+    def test_spec_example_priority_rules(self):
+        from apps.core.models import line_total
+
+        p = make_product(price="3000.00", stock=50)
+        for qty, price in ((2, "5000.00"), (4, "10000.00"), (6, "13000.00")):
+            self._add_rule(p, qty, price)
+        expected = {
+            1: "3000.00", 2: "5000.00", 3: "9000.00",
+            4: "10000.00", 5: "15000.00", 6: "13000.00", 7: "21000.00",
+        }
+        for qty, total in expected.items():
+            self.assertEqual(line_total(p, qty), Decimal(total), f"qty {qty}")
+
+    def test_qty_one_is_always_base_price(self):
+        from apps.core.models import line_total
+
+        p = make_product(price="3000.00", stock=50)
+        self._add_rule(p, 1, "99999.00")  # rule 1 price must be ignored entirely
+        self._add_rule(p, 2, "5000.00")
+        self.assertEqual(line_total(p, 1), Decimal("3000.00"))
+        self.assertEqual(line_total(p, 2), Decimal("5000.00"))
+
+    def test_save_quantity_prices_skips_qty_one_and_blank(self):
+        from apps.core.models import save_quantity_prices
+
+        p = make_product(price="2000.00", stock=30)
+        n = save_quantity_prices(
+            p, ["1", "3", "3", "7", "0", ""], ["99999", "5000", "7000", "15000", "1", "80"]
+        )
+        rules = {r.quantity: r.price for r in p.quantity_prices.all()}
+        self.assertEqual(n, 2)  # deduped qty 3; qty 1, 0 & blank skipped
+        self.assertEqual(len(rules), 2)
+        self.assertEqual(rules[3], Decimal("7000"))  # last wins on duplicate
+        self.assertEqual(rules[7], Decimal("15000"))
+        self.assertNotIn(1, rules)
+
+
 class PublishPermissionTests(TestCase):
     def setUp(self):
         self.manager = make_user("m@falcon.test", FalconUser.ROLE_MANAGER)
