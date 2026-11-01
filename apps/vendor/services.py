@@ -24,7 +24,7 @@ def get_or_create_wallet(vendor):
     wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
     return wallet
 
-
+@db_transaction.atomic
 def _apply_wallet_change(wallet, tx_type, amount, sign, reason="", created_by=None, related_order=None):
     amount = Decimal(amount).quantize(Decimal("0.01"))
     wallet = VendorWallet.objects.select_for_update().get(id=wallet.id)
